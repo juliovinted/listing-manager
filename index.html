@@ -77,8 +77,8 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 
 <section id="ai" class="hidden">
 <div class="card">
-<h2>✨ Generador de anuncios con IA</h2>
-<p class="muted">Sube una o varias fotos, añade los datos que conozcas y genera un título y una descripción en inglés optimizados para Vinted.</p>
+<h2>✨ Generador de anuncios con Gemini</h2>
+<p class="muted">Sube las fotos de la prenda y Gemini analizará el artículo para crear el título y la descripción de Vinted.</p>
 <label>FOTOS DE LA PRENDA</label>
 <div class="actions"><button type="button" onclick="aiPhotoInput.click()">📸 Añadir fotos</button></div>
 <input id="aiPhotoInput" type="file" accept="image/*" multiple class="hidden">
@@ -90,19 +90,27 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 <div class="actions"><button type="button" onclick="generateAIListing()">✨ Generar título + descripción</button><button type="button" class="secondary" onclick="clearAI()">Limpiar</button></div>
 <div id="aiStatus" class="small" style="margin-top:10px"></div>
 </div>
+<div class="card">
+<h3>⚙️ Conexión con Gemini</h3>
+<p class="muted">La página no guarda tu API key. La petición pasa por tu Cloudflare Worker, que guarda la clave de Gemini como secreto.</p>
+<label>URL DE TU WORKER</label>
+<input id="aiEndpoint" placeholder="https://tu-worker.tu-subdominio.workers.dev">
+<div class="actions"><button type="button" class="secondary" onclick="saveAISettings()">Guardar conexión</button><button type="button" class="secondary" onclick="testAIConnection()">Probar conexión</button></div>
+<p class="small">Necesitas desplegar <b>worker.js</b> y configurar el secreto <b>GEMINI_API_KEY</b>. El nivel gratuito de Gemini permite empezar sin coste, sujeto a sus límites.</p>
+</div>
 <div id="aiResult" class="card hidden">
 <h3>Resultado</h3>
 <label>TÍTULO</label>
-<input id="aiTitle" readonly>
+<input id="aiTitle">
 <div class="actions"><button type="button" class="secondary" onclick="copyAIField('aiTitle')">📋 Copiar título</button></div>
 <label>DESCRIPCIÓN</label>
-<textarea id="aiDescription" readonly style="width:100%;min-height:260px;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:#0c0c10;color:var(--text);font:inherit;resize:vertical;margin:7px 0 10px"></textarea>
-<div class="actions"><button type="button" class="secondary" onclick="copyAIField('aiDescription')">📋 Copiar descripción</button><button type="button" onclick="useAIInNewListing()">➕ Pasar a nuevo anuncio</button></div><p class="small" style="margin-top:10px">Después de pulsar <b>Pasar a nuevo anuncio</b>, podrás revisar el título, descripción, fotos, talla y marca, elegir las cuentas y pulsar <b>Guardar anuncio</b> para añadirlo a tus anuncios.</p>
+<textarea id="aiDescription" style="width:100%;min-height:260px;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:#0c0c10;color:var(--text);font:inherit;resize:vertical;margin:7px 0 10px"></textarea>
+<div class="actions"><button type="button" class="secondary" onclick="copyAIField('aiDescription')">📋 Copiar descripción</button><button type="button" onclick="useAIInNewListing()">➕ Pasar a nuevo anuncio</button></div>
+<p class="small" style="margin-top:10px">Puedes editar el resultado antes de pasarlo al editor. Después podrás elegir las cuentas y pulsar <b>Guardar anuncio</b>.</p>
 </div>
 <div class="card">
-<h3>🧠 IA local y gratuita</h3>
-<p class="muted">Esta prueba ejecuta el modelo directamente en tu navegador. No necesita API key ni backend. La primera vez tendrá que descargar el modelo y puede tardar un poco.</p>
-<p class="small">Si tu navegador dispone de WebGPU intentará usarlo; si no, utilizará el modo CPU/WASM. El modelo se guarda en la caché del navegador cuando es posible.</p>
+<h3>🤖 ¿Cómo funciona?</h3>
+<p class="muted">Gemini analiza las imágenes y devuelve únicamente el título y la descripción. Tus fotos siguen guardadas localmente en la aplicación y se copian al nuevo anuncio al pulsar «Pasar a nuevo anuncio».</p>
 </div>
 <div class="actions"><button type="button" class="secondary" onclick="show('home')">Volver</button></div>
 </section>
@@ -142,6 +150,8 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 <div id="toast" class="hidden" style="position:fixed;left:16px;right:16px;bottom:22px;z-index:99;background:#f5f5f7;color:#09090b;padding:14px 16px;border-radius:15px;font-weight:800;box-shadow:0 18px 45px #0008;text-align:center"></div>
 
 <script>
+const GEMINI_WORKER_URL='https://vinted-gemini.m8c9j7hfvn.workers.dev';
+if(!localStorage.getItem('lm_gemini_endpoint')) localStorage.setItem('lm_gemini_endpoint',GEMINI_WORKER_URL);
 let listings=[];
 let current=null, files=[];
 let dbPromise=null;
@@ -394,14 +404,43 @@ galleryInput.addEventListener('change', async e=>{
 function renderPhotoGrid(arr){photoGrid.innerHTML=arr.map(p=>`<img src="${p}">`).join('')}
 function showAI(){
  show('ai');
+ const endpoint=localStorage.getItem('lm_gemini_endpoint')||GEMINI_WORKER_URL;
+ document.getElementById('aiEndpoint').value=endpoint;
  const status=document.getElementById('aiStatus');
- if(!document.getElementById('aiResult').classList.contains('hidden')) status.textContent='✓ Resultado listo. Puedes pasarlo a un anuncio y guardarlo.';
+ if(document.getElementById('aiResult').classList.contains('hidden')){
+   status.textContent=endpoint?'✓ Gemini preparado. Añade fotos y genera el anuncio.':'⚙️ Añade la URL de tu Worker de Gemini para empezar.';
+ }else status.textContent='✓ Resultado listo. Puedes editarlo o pasarlo a un anuncio.';
+}
+function saveAISettings(){
+ const value=document.getElementById('aiEndpoint').value.trim().replace(/\/$/,'');
+ if(value && !/^https:\/\//i.test(value)){alert('La URL debe empezar por https://');return}
+ localStorage.setItem('lm_gemini_endpoint',value);
+ toast(value?'✓ Conexión de Gemini guardada':'✓ Conexión eliminada');
+ document.getElementById('aiStatus').textContent=value?'✓ Gemini preparado.':'⚙️ Añade la URL de tu Worker de Gemini para empezar.';
+}
+async function testAIConnection(){
+ const endpoint=document.getElementById('aiEndpoint').value.trim().replace(/\/$/,'');
+ if(!endpoint){alert('Introduce primero la URL de tu Worker.');return}
+ const status=document.getElementById('aiStatus');
+ status.textContent='⏳ Probando conexión con Gemini…';
+ try{
+   const r=await fetch(endpoint,{method:'GET'});
+   const data=await r.json().catch(()=>({}));
+   if(!r.ok) throw new Error(data.error||('HTTP '+r.status));
+   localStorage.setItem('lm_gemini_endpoint',endpoint);
+   status.textContent='✓ Conexión correcta con Gemini.';
+ }catch(err){
+   console.error(err);
+   status.textContent='❌ No se pudo conectar con el Worker.';
+   alert('No se pudo conectar con Gemini.\n\nComprueba la URL del Worker y que esté desplegado.\n\n'+(err.message||'Error desconocido'));
+ }
 }
 function clearAI(){
  aiPhotos=[]; document.getElementById('aiPhotoGrid').innerHTML='';
  ['aiBrand','aiSize','aiColor','aiExtra','aiTitle','aiDescription'].forEach(id=>document.getElementById(id).value='');
  document.getElementById('aiResult').classList.add('hidden');
- document.getElementById('aiStatus').textContent='';
+ const endpoint=localStorage.getItem('lm_gemini_endpoint')||GEMINI_WORKER_URL;
+ document.getElementById('aiStatus').textContent=endpoint?'✓ Gemini preparado. Añade fotos y genera el anuncio.':'⚙️ Añade la URL de tu Worker de Gemini para empezar.';
 }
 function renderAIPhotos(){
  document.getElementById('aiPhotoGrid').innerHTML=aiPhotos.map(p=>`<img src="${p}" alt="Foto de la prenda">`).join('');
@@ -410,81 +449,41 @@ async function fileToDataURL(file){
  return await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file);});
 }
 document.getElementById('aiPhotoInput').addEventListener('change',async e=>{
- try{ aiPhotos=await Promise.all(Array.from(e.target.files||[]).slice(0,4).map(fileToDataURL)); renderAIPhotos(); }
+ try{ aiPhotos=await Promise.all(Array.from(e.target.files||[]).slice(0,6).map(fileToDataURL)); renderAIPhotos(); document.getElementById('aiStatus').textContent=aiPhotos.length+' foto(s) preparada(s).'; }
  catch(err){console.error(err);alert('No se pudieron cargar las fotos.');}
  e.target.value='';
 });
-
-let localAIPipeline=null;
-let localAILoading=null;
-async function getLocalAIPipeline(status){
- if(localAIPipeline) return localAIPipeline;
- if(localAILoading) return localAILoading;
- localAILoading=(async()=>{
-   status.textContent='⏳ Cargando la IA local… La primera vez puede tardar y descargar el modelo.';
-   const mod=await import('https://esm.sh/@huggingface/transformers@4.0.0');
-   const {pipeline,env}=mod;
-   env.allowLocalModels=false;
-   env.useBrowserCache=true;
-   const useGPU=typeof navigator!=='undefined' && 'gpu' in navigator;
-   const options={dtype:'q4'};
-   if(useGPU) options.device='webgpu';
-   try{
-     localAIPipeline=await pipeline('image-text-to-text','HuggingFaceTB/SmolVLM-256M-Instruct',options);
-   }catch(firstErr){
-     if(useGPU){
-       status.textContent='⏳ WebGPU no ha podido cargar el modelo; probando modo CPU…';
-       localAIPipeline=await pipeline('image-text-to-text','HuggingFaceTB/SmolVLM-256M-Instruct',{dtype:'q4'});
-     }else throw firstErr;
-   }
-   return localAIPipeline;
- })();
- try{return await localAILoading;}finally{localAILoading=null;}
-}
-function extractAIText(output){
- let x=output;
- if(Array.isArray(x)) x=x[0];
- if(x && Array.isArray(x.generated_text)) x=x.generated_text.at(-1);
- if(x && typeof x==='object' && x.generated_text!=null) x=x.generated_text;
- if(typeof x!=='string') x=JSON.stringify(x);
- return String(x||'').trim();
-}
-function cleanGeneratedListing(text){
- let t=text.replace(/^```[\s\S]*?\n|```$/g,'').trim();
- const titleMatch=t.match(/(?:^|\n)TITLE\s*:\s*(.*)/i);
- const descMatch=t.match(/(?:^|\n)DESCRIPTION\s*:\s*([\s\S]*)/i);
- if(titleMatch && descMatch) return {title:titleMatch[1].trim().slice(0,100),description:descMatch[1].trim()};
- const lines=t.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
- return {title:(lines[0]||'').replace(/^title\s*[:\-]?\s*/i,'').slice(0,100),description:lines.slice(1).join('\n').replace(/^description\s*[:\-]?\s*/i,'').trim()};
+function dataUrlParts(dataUrl){
+ const m=String(dataUrl).match(/^data:([^;]+);base64,(.+)$/);
+ if(!m) throw new Error('Formato de imagen no válido.');
+ return {mimeType:m[1],data:m[2]};
 }
 async function generateAIListing(){
  const status=document.getElementById('aiStatus');
- status.textContent='⏳ Preparando la IA…';
+ const endpoint=(document.getElementById('aiEndpoint').value.trim()||localStorage.getItem('lm_gemini_endpoint')||GEMINI_WORKER_URL).replace(/\/$/,'');
+ if(!endpoint){status.textContent='';alert('Primero introduce la URL de tu Cloudflare Worker en «Conexión con Gemini».');return}
  if(!aiPhotos.length){status.textContent='';alert('Sube al menos una foto de la prenda.');return}
  const size=document.getElementById('aiSize').value.trim();
  if(!size){status.textContent='';alert('Indica la talla.');return}
  const brand=document.getElementById('aiBrand').value.trim();
  const color=document.getElementById('aiColor').value.trim();
  const extra=document.getElementById('aiExtra').value.trim();
- const status=document.getElementById('aiStatus');
+ localStorage.setItem('lm_gemini_endpoint',endpoint);
+ status.textContent='⏳ Enviando fotos a Gemini…';
  try{
-   const model=await getLocalAIPipeline(status);
-   status.textContent='🔎 Analizando la prenda y redactando el anuncio…';
-   const content=[];
-   aiPhotos.forEach(src=>content.push({type:'image',image:src}));
-   content.push({type:'text',text:`${AI_PROMPT}\n\nReturn ONLY this exact format:\nTITLE: [one optimized English title, max 100 characters]\nDESCRIPTION: [the complete English description]\n\nKnown user information (use it exactly; do not invent missing facts):\nBrand: ${brand||'not provided'}\nSize: ${size}\nColor: ${color||'not provided'}\nExtra instructions: ${extra||'none'}\n\nAnalyze the clothing in the photos first. Do not treat jeans, furniture, backgrounds or styling props as part of the item. If the brand is not provided and not clearly readable, do not invent it.`});
-   const messages=[{role:'user',content}];
-   const out=await model(messages,{max_new_tokens:420,return_full_text:false});
-   const parsed=cleanGeneratedListing(extractAIText(out));
-   if(!parsed.title||!parsed.description) throw new Error('La IA no devolvió un resultado válido.');
-   document.getElementById('aiTitle').value=parsed.title;
-   document.getElementById('aiDescription').value=parsed.description;
+   const photos=aiPhotos.map(dataUrlParts);
+   const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({photos,brand,size,color,extra})});
+   const data=await r.json().catch(()=>({}));
+   if(!r.ok) throw new Error(data.error||('HTTP '+r.status));
+   if(!data.title||!data.description) throw new Error('Gemini no devolvió un título y una descripción válidos.');
+   document.getElementById('aiTitle').value=String(data.title).slice(0,100);
+   document.getElementById('aiDescription').value=String(data.description);
    document.getElementById('aiResult').classList.remove('hidden');
-   status.textContent='✓ Anuncio generado localmente · 0 €';
+   status.textContent='✓ Anuncio generado con Gemini.';
  }catch(err){
    console.error(err);
-   status.textContent='';
-   alert('No se pudo ejecutar la IA local. Puede que tu navegador no tenga suficiente memoria o que este modelo todavía no sea compatible con tu dispositivo.\n\n'+(err.message||'Error desconocido'));
+   status.textContent='❌ Error al generar el anuncio.';
+   alert('No se pudo generar el anuncio con Gemini.\n\n'+(err.message||'Error desconocido'));
  }
 }
 async function copyAIField(id){
@@ -497,13 +496,19 @@ function useAIInNewListing(){
  const title=document.getElementById('aiTitle').value.trim();
  const description=document.getElementById('aiDescription').value.trim();
  if(!title||!description){alert('Primero genera el anuncio con la IA.');return}
+ const photos=aiPhotos.slice();
+ const brand=document.getElementById('aiBrand').value.trim();
+ const size=document.getElementById('aiSize').value.trim();
  newListing();
- document.getElementById('name').value=document.getElementById('aiTitle').value;
- document.getElementById('description').value=document.getElementById('aiDescription').value;
- document.getElementById('brand').value=document.getElementById('aiBrand').value.trim();
- document.getElementById('size').value=document.getElementById('aiSize').value.trim();
- if(aiPhotos.length){ current.photos=aiPhotos.slice(); renderPhotoGrid(current.photos); }
+ document.getElementById('name').value=title;
+ document.getElementById('description').value=description;
+ document.getElementById('brand').value=brand;
+ document.getElementById('size').value=size;
+ if(photos.length){current.photos=photos;renderPhotoGrid(current.photos);}
+ show('editor');
+ toast('✓ Anuncio preparado. Revisa las cuentas y pulsa Guardar anuncio.');
 }
+
 function openPrivacy(i){current=listings[i];document.getElementById('privacyGrid').innerHTML=current.photos.map(p=>`<img src="${p}">`).join('');show('privacy')}
 async function processPhotos(){
  if(!current || !current.photos.length){toast('Este anuncio no tiene fotos');return}

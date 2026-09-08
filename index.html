@@ -6,22 +6,21 @@
 <meta name="theme-color" content="#111111">
 <title>Listing Manager</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",Arial,sans-serif;background:#f5f5f7;color:#111}
-header{padding:22px 18px 12px;background:#fff;position:sticky;top:0;z-index:2;border-bottom:1px solid #ddd}
-h1{font-size:28px;margin:0 0 4px}p{color:#666;margin:0}.wrap{padding:16px;max-width:700px;margin:auto}
-button,input,select{font:inherit}button{border:0;border-radius:13px;padding:12px 15px;font-weight:600;background:#111;color:#fff}
-.secondary{background:#e9e9ed;color:#111}.danger{background:#ff3b30}.card{background:#fff;border-radius:18px;padding:15px;margin:12px 0;box-shadow:0 1px 4px #00000012}
-.row{display:flex;gap:10px;align-items:center;justify-content:space-between}.muted{color:#777;font-size:14px}.tag{display:inline-block;background:#eee;border-radius:9px;padding:5px 8px;font-size:12px;margin-top:8px}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px}.grid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px}
-input,select{width:100%;padding:12px;border:1px solid #d5d5d8;border-radius:12px;background:#fff;margin:6px 0 12px}
-label{font-size:13px;font-weight:600}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-.hidden{display:none}.range{width:100%}.preview{width:100%;max-height:55vh;object-fit:contain;background:#eee;border-radius:15px}
-.nav{display:flex;gap:8px;margin-bottom:14px}.nav button{flex:1}.empty{text-align:center;padding:40px 10px;color:#777}
-.small{font-size:12px}.check{display:flex;gap:8px;align-items:center;margin:8px 0 14px}.check input{width:auto;margin:0}
+:root{--bg:#070709;--panel:#111116;--panel2:#17171d;--line:#292932;--text:#f5f5f7;--muted:#8d8d98;--accent:#b8ff3d;--accent2:#7c5cff;--danger:#ff5364}
+*{box-sizing:border-box}html{background:var(--bg)}body{margin:0;background:radial-gradient(circle at 85% 0%,#20184a 0,transparent 30%),radial-gradient(circle at 10% 15%,#132414 0,transparent 25%),var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Inter",Arial,sans-serif;min-height:100vh}
+header{padding:28px 18px 16px;position:sticky;top:0;z-index:10;background:rgba(7,7,9,.78);backdrop-filter:blur(22px);border-bottom:1px solid rgba(255,255,255,.07)}
+.brand{display:flex;align-items:center;gap:12px}.logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#70d7ff);display:grid;place-items:center;color:#09090b;font-weight:900;font-size:17px;box-shadow:0 0 30px #b8ff3d25}h1{font-size:22px;letter-spacing:-.5px;margin:0}.sub{color:var(--muted);font-size:12px;margin-top:2px}
+.wrap{padding:18px 16px 100px;max-width:760px;margin:auto}.nav{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:18px}.nav button{padding:11px 8px}
+button{font:inherit;border:0;border-radius:12px;padding:12px 14px;background:var(--accent);color:#0a0a0b;font-weight:800;box-shadow:0 8px 25px #b8ff3d14;transition:.18s transform,.18s opacity}button:active{transform:scale(.97);opacity:.8}.secondary{background:var(--panel2);border:1px solid var(--line);color:var(--text);box-shadow:none}.danger{background:#271116;border:1px solid #5a2029;color:#ff8c98;box-shadow:none}
+.card{background:linear-gradient(180deg,rgba(24,24,30,.94),rgba(14,14,18,.94));border:1px solid var(--line);border-radius:20px;padding:16px;margin:12px 0;box-shadow:0 18px 55px #00000030}.card h2{margin:2px 0 6px;font-size:21px;letter-spacing:-.4px}.card h3{margin:0 0 5px}
+.row{display:flex;gap:12px;align-items:center;justify-content:space-between}.muted{color:var(--muted);font-size:13px}.tag{display:inline-block;background:#1c1c23;border:1px solid #30303a;color:#cfcfd7;border-radius:9px;padding:5px 8px;font-size:11px;margin:10px 4px 0 0}.price{font-size:18px;font-weight:800}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px}.grid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;border:1px solid #30303a}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}.actions button{flex:0 0 auto}
+input,select{font:inherit;width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:#0c0c10;color:var(--text);margin:7px 0 14px;outline:none}input:focus,select:focus{border-color:#6666ff;box-shadow:0 0 0 3px #7c5cff18}label{font-size:12px;color:#bdbdc6;font-weight:700;letter-spacing:.2px}.range{accent-color:var(--accent);padding:0!important;border:0!important;box-shadow:none!important}.hidden{display:none}.preview{width:100%;max-height:55vh;object-fit:contain;background:#09090b;border-radius:16px;border:1px solid var(--line)}.empty{text-align:center;padding:48px 12px;color:var(--muted)}.small{font-size:11px;color:var(--muted)}.check{display:flex;gap:9px;align-items:center;margin:8px 0 14px}.check input{width:auto;margin:0;accent-color:var(--accent)}
+.hero{padding:20px;border-radius:22px;background:linear-gradient(135deg,#14191a,#171326);border:1px solid #2d2d37;margin-bottom:16px}.hero-title{font-size:30px;font-weight:850;letter-spacing:-1.4px;line-height:1.05}.hero p{margin:8px 0 0;color:#9999a4;font-size:13px}
+hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 </style>
 </head>
 <body>
-<header><h1>Listing Manager</h1><p>Gestor privado de tus anuncios</p></header>
+<header><div class="brand"><div class="logo">LM</div><div><h1>Listing Manager</h1><div class="sub">Private workspace · iPhone</div></div></div></header>
 <div class="wrap">
 <div class="nav">
 <button onclick="show('home')">Anuncios</button>
@@ -29,7 +28,10 @@ label{font-size:13px;font-weight:600}.actions{display:flex;gap:8px;flex-wrap:wra
 <button onclick="showAccounts()">👤 Cuentas</button>
 </div>
 
-<section id="home"></section>
+<section id="home">
+<div class="hero"><div class="hero-title">Tu armario.<br>Todo en un sitio.</div><p>Organiza listings, cuentas y fotografías desde tu iPhone.</p></div>
+<div id="homeList"></div>
+</section>
 
 <section id="editor" class="hidden">
 <div class="card">
@@ -108,7 +110,7 @@ function clearForm(){
  document.getElementById('photoGrid').innerHTML='';
 }
 function renderHome(){
- const el=document.getElementById('home');
+ const el=document.getElementById('homeList');
  if(!listings.length){el.innerHTML='<div class="card empty">Todavía no tienes anuncios.<br><br>Pulsa <b>+ Nuevo</b> para crear el primero.</div>';return}
  el.innerHTML=listings.map((l,i)=>`<div class="card">
  <div class="row"><div><b>${esc(l.name||'Sin título')}</b><div class="muted">${esc(l.brand||'')} · ${esc(l.size||'')}</div></div><b>${Number(l.price||0).toFixed(2)} €</b></div>
@@ -138,10 +140,10 @@ async function processPhotos(){
  const rot=+rotation.value,crop=+crop.value;
  const area=document.getElementById('processedArea');
  area.classList.remove('hidden');
- area.innerHTML='<div class="card"><b>Procesando fotos…</b><p class="muted">Espera un momento.</p></div>';
+ area.innerHTML='<div class="card"><b>Procesando…</b><p class="muted">Preparando tus copias en este dispositivo.</p></div>';
  try{
    const out=await Promise.all(current.photos.map(src=>processImage(src,rot,crop)));
-   area.innerHTML='<div class="card"><h3>Fotos listas</h3><p class="muted">En iPhone, toca <b>Guardar en Fotos</b> en cada imagen y después selecciona <b>Guardar imagen</b> si aparece esa opción.</p><div id="processedList"></div></div>';
+   area.innerHTML='<div class="card"><h3>✓ Fotos preparadas</h3><p class="muted">Toca una foto y usa el botón para abrirla. Después mantén pulsada la imagen y elige «Guardar en Fotos».</p><div id="processedList"></div></div>';
    const list=document.getElementById('processedList');
    out.forEach((blob,i)=>{
      const url=URL.createObjectURL(blob);
@@ -149,34 +151,29 @@ async function processPhotos(){
      item.className='card';
      item.innerHTML=`<img class="preview" src="${url}" alt="Foto procesada ${i+1}">
        <div class="actions">
-         <button type="button" onclick="shareProcessed('${url}','listing_${current.id}_${i+1}.jpg')">📤 Guardar en Fotos</button>
-         <a href="${url}" download="listing_${current.id}_${i+1}.jpg" style="text-decoration:none"><button type="button" class="secondary">⬇️ Descargar</button></a>
+        <button type="button" onclick="openProcessed('${url}')">🖼️ Abrir foto</button>
+        <button type="button" class="secondary" onclick="shareProcessed('${url}','listing_${current.id}_${i+1}.jpg')">📤 Compartir</button>
        </div>`;
      list.appendChild(item);
    });
  }catch(err){
    console.error(err);
-   area.innerHTML='<div class="card"><b>No se pudieron procesar las fotos.</b><p class="muted">Prueba de nuevo desde Safari.</p></div>';
+   area.innerHTML='<div class="card"><b>Ha ocurrido un error.</b><p class="muted">Vuelve a intentarlo desde Safari.</p></div>';
  }
 }
-
+function openProcessed(url){
+ const w=window.open();
+ if(w){w.document.write('<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><body style="margin:0;background:#000;display:grid;place-items:center;height:100vh"><img src="'+url+'" style="max-width:100%;max-height:100%;object-fit:contain"></body>');w.document.close();}
+ else {location.href=url;}
+}
 async function shareProcessed(url,name){
  try{
-   const response=await fetch(url);
-   const blob=await response.blob();
-   const file=new File([blob],name,{type:'image/jpeg'});
-   if(navigator.share && (!navigator.canShare || navigator.canShare({files:[file]}))){
-      await navigator.share({files:[file],title:'Foto procesada'});
-   }else{
-      // Reliable iOS fallback: open the generated image so the user can long-press
-      // and choose "Guardar en Fotos".
-      window.open(url,'_blank');
-      alert('Mantén pulsada la imagen y elige «Guardar en Fotos».');
-   }
- }catch(err){
-   if(err && err.name==='AbortError') return;
-   window.open(url,'_blank');
- }
+  const r=await fetch(url); const blob=await r.blob();
+  const file=new File([blob],name,{type:'image/jpeg'});
+  if(navigator.share && (!navigator.canShare || navigator.canShare({files:[file]}))){
+    await navigator.share({files:[file],title:'Foto procesada'});
+  }else{openProcessed(url);alert('Mantén pulsada la imagen y pulsa «Guardar en Fotos».');}
+ }catch(e){if(e.name!=='AbortError'){openProcessed(url);}}
 }
 
 function processImage(src,deg,crop){

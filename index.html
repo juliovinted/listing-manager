@@ -97,7 +97,7 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 <div class="actions"><button type="button" class="secondary" onclick="copyAIField('aiTitle')">📋 Copiar título</button></div>
 <label>DESCRIPCIÓN</label>
 <textarea id="aiDescription" readonly style="width:100%;min-height:260px;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:#0c0c10;color:var(--text);font:inherit;resize:vertical;margin:7px 0 10px"></textarea>
-<div class="actions"><button type="button" class="secondary" onclick="copyAIField('aiDescription')">📋 Copiar descripción</button><button type="button" onclick="useAIInNewListing()">➕ Usar en nuevo anuncio</button></div>
+<div class="actions"><button type="button" class="secondary" onclick="copyAIField('aiDescription')">📋 Copiar descripción</button><button type="button" onclick="useAIInNewListing()">➕ Pasar a nuevo anuncio</button></div><p class="small" style="margin-top:10px">Después de pulsar <b>Pasar a nuevo anuncio</b>, podrás revisar el título, descripción, fotos, talla y marca, elegir las cuentas y pulsar <b>Guardar anuncio</b> para añadirlo a tus anuncios.</p>
 </div>
 <div class="card">
 <h3>🧠 IA local y gratuita</h3>
@@ -269,7 +269,7 @@ function accountSummary(l){
 }
 
 function show(id){
-  ['home','editor','privacy','accounts'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id));
+  ['home','editor','privacy','accounts','ai'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id));
   if(id==='home') renderHome();
 }
 function newListing(){
@@ -394,6 +394,8 @@ galleryInput.addEventListener('change', async e=>{
 function renderPhotoGrid(arr){photoGrid.innerHTML=arr.map(p=>`<img src="${p}">`).join('')}
 function showAI(){
  show('ai');
+ const status=document.getElementById('aiStatus');
+ if(!document.getElementById('aiResult').classList.contains('hidden')) status.textContent='✓ Resultado listo. Puedes pasarlo a un anuncio y guardarlo.';
 }
 function clearAI(){
  aiPhotos=[]; document.getElementById('aiPhotoGrid').innerHTML='';
@@ -456,9 +458,11 @@ function cleanGeneratedListing(text){
  return {title:(lines[0]||'').replace(/^title\s*[:\-]?\s*/i,'').slice(0,100),description:lines.slice(1).join('\n').replace(/^description\s*[:\-]?\s*/i,'').trim()};
 }
 async function generateAIListing(){
- if(!aiPhotos.length){alert('Sube al menos una foto de la prenda.');return}
+ const status=document.getElementById('aiStatus');
+ status.textContent='⏳ Preparando la IA…';
+ if(!aiPhotos.length){status.textContent='';alert('Sube al menos una foto de la prenda.');return}
  const size=document.getElementById('aiSize').value.trim();
- if(!size){alert('Indica la talla.');return}
+ if(!size){status.textContent='';alert('Indica la talla.');return}
  const brand=document.getElementById('aiBrand').value.trim();
  const color=document.getElementById('aiColor').value.trim();
  const extra=document.getElementById('aiExtra').value.trim();
@@ -490,6 +494,9 @@ async function copyAIField(id){
  catch(e){el.focus();el.select();document.execCommand('copy');toast('✓ Copiado al portapapeles');}
 }
 function useAIInNewListing(){
+ const title=document.getElementById('aiTitle').value.trim();
+ const description=document.getElementById('aiDescription').value.trim();
+ if(!title||!description){alert('Primero genera el anuncio con la IA.');return}
  newListing();
  document.getElementById('name').value=document.getElementById('aiTitle').value;
  document.getElementById('description').value=document.getElementById('aiDescription').value;

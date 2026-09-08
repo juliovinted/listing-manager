@@ -13,7 +13,7 @@ header{padding:28px 18px 16px;position:sticky;top:0;z-index:10;background:rgba(7
 .wrap{padding:18px 16px 100px;max-width:760px;margin:auto}.nav{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:18px}.nav button{padding:11px 8px}
 button{font:inherit;border:0;border-radius:12px;padding:12px 14px;background:var(--accent);color:#0a0a0b;font-weight:800;box-shadow:0 8px 25px #b8ff3d14;transition:.18s transform,.18s opacity}button:active{transform:scale(.97);opacity:.8}.secondary{background:var(--panel2);border:1px solid var(--line);color:var(--text);box-shadow:none}.danger{background:#271116;border:1px solid #5a2029;color:#ff8c98;box-shadow:none}
 .card{background:linear-gradient(180deg,rgba(24,24,30,.94),rgba(14,14,18,.94));border:1px solid var(--line);border-radius:20px;padding:16px;margin:12px 0;box-shadow:0 18px 55px #00000030}.card h2{margin:2px 0 6px;font-size:21px;letter-spacing:-.4px}.card h3{margin:0 0 5px}
-.row{display:flex;gap:12px;align-items:center;justify-content:space-between}.muted{color:var(--muted);font-size:13px}.tag{display:inline-block;background:#1c1c23;border:1px solid #30303a;color:#cfcfd7;border-radius:9px;padding:5px 8px;font-size:11px;margin:10px 4px 0 0}.price{font-size:18px;font-weight:800}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px}.grid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;border:1px solid #30303a}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}.actions button{flex:0 0 auto}
+.row{display:flex;gap:12px;align-items:center;justify-content:space-between}.muted{color:var(--muted);font-size:13px}.tag{display:inline-block;background:#1c1c23;border:1px solid #30303a;color:#cfcfd7;border-radius:9px;padding:5px 8px;font-size:11px;margin:10px 4px 0 0}.price{font-size:18px;font-weight:800}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px}.grid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;border:1px solid #30303a}.listing-gallery{margin-top:14px}.listing-main-photo{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:16px;border:1px solid #30303a;display:block}.listing-thumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:8px}.listing-thumbs img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;border:1px solid #30303a}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}.actions button{flex:0 0 auto}
 input,select{font:inherit;width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:#0c0c10;color:var(--text);margin:7px 0 14px;outline:none}input:focus,select:focus{border-color:#6666ff;box-shadow:0 0 0 3px #7c5cff18}label{font-size:12px;color:#bdbdc6;font-weight:700;letter-spacing:.2px}.range{accent-color:var(--accent);padding:0!important;border:0!important;box-shadow:none!important}.hidden{display:none}.preview{width:100%;max-height:55vh;object-fit:contain;background:#09090b;border-radius:16px;border:1px solid var(--line)}.empty{text-align:center;padding:48px 12px;color:var(--muted)}.small{font-size:11px;color:var(--muted)}.check{display:flex;gap:9px;align-items:center;margin:8px 0 14px}.check input{width:auto;margin:0;accent-color:var(--accent)}
 .hero{padding:20px;border-radius:22px;background:linear-gradient(135deg,#14191a,#171326);border:1px solid #2d2d37;margin-bottom:16px}.hero-title{font-size:30px;font-weight:850;letter-spacing:-1.4px;line-height:1.05}.hero p{margin:8px 0 0;color:#9999a4;font-size:13px}
 hr{border:0;border-top:1px solid var(--line);margin:18px 0}
@@ -85,7 +85,7 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 <input class="range" id="crop" type="range" min="0" max="10" step="1" value="0" oninput="cropVal.textContent=this.value+' px'">
 <label class="check"><input id="strip" type="checkbox" checked> Eliminar metadatos EXIF al exportar</label>
 <div class="actions">
-<button onclick="processPhotos()">Procesar y guardar en Fotos</button>
+<button onclick="processPhotos()">Procesar todas las fotos</button>
 <button class="secondary" onclick="show('home')">Volver</button>
 </div>
 <p class="small" style="margin-top:12px">La exportación genera nuevas imágenes JPG sin los metadatos EXIF habituales.</p>
@@ -133,22 +133,42 @@ function clearForm(){
 function renderHome(){
  const el=document.getElementById('homeList');
  if(!listings.length){el.innerHTML='<div class="card empty">Todavía no tienes anuncios.<br><br>Pulsa <b>+ Nuevo</b> para crear el primero.</div>';return}
- el.innerHTML=listings.map((l,i)=>`<div class="card">
- <div class="row"><div><b>${esc(l.name||'Sin título')}</b><div class="muted">${esc(l.brand||'')} · ${esc(l.size||'')}</div></div><b>${Number(l.price||0).toFixed(2)} €</b></div>
- <span class="tag">👤 ${esc(accountSummary(l))}</span> <span class="tag">${esc(l.condition)}</span>
- ${l.photos.length?'<div class="grid">'+l.photos.map(p=>`<img src="${p}">`).join('')+'</div>':''}
- <div class="actions"><button onclick="editListing(${i})">Editar</button><button class="secondary" onclick="openPrivacy(${i})">🔒 Privacidad / fotos</button><button class="danger" onclick="deleteListing(${i})">Borrar</button></div>
- </div>`).join('');
+ el.innerHTML=listings.map((l,i)=>{
+   const photos=Array.isArray(l.photos)?l.photos:[];
+   const main=photos[0]||'';
+   return `<div class="card">
+    <div class="row"><div><b>${esc(l.name||'Sin título')}</b><div class="muted">${esc(l.brand||'')} · ${esc(l.size||'')}</div></div><b class="price">${Number(l.price||0).toFixed(2)} €</b></div>
+    <span class="tag">👤 ${esc(accountSummary(l))}</span> <span class="tag">${esc(l.condition||'')}</span>
+    ${main?`<div class="listing-gallery"><img class="listing-main-photo" src="${main}" alt="Foto principal">${photos.length>1?`<div class="listing-thumbs">${photos.slice(1).map((p,j)=>`<img src="${p}" alt="Foto ${j+2}">`).join('')}</div>`:''}<div class="small" style="margin-top:7px">${photos.length} foto${photos.length===1?'':'s'} en este anuncio</div></div>`:''}
+    <div class="actions"><button onclick="editListing(${i})">Editar</button><button class="secondary" onclick="openPrivacy(${i})">🔒 Privacidad / fotos</button><button class="danger" onclick="deleteListing(${i})">Borrar</button></div>
+   </div>`;
+ }).join('');
 }
+
 function editListing(i){
  current=listings[i]; files=[]; document.getElementById('name').value=current.name||'';document.getElementById('brand').value=current.brand||'';document.getElementById('size').value=current.size||'';document.getElementById('price').value=current.price||'';document.getElementById('description').value=current.description||'';renderAccountChecks(current.accounts || (current.account?[current.account]:[]));document.getElementById('condition').value=current.condition||'Nuevo';renderPhotoGrid(current.photos);show('editor');
 }
 function saveListing(){
- current.name=name.value;current.brand=brand.value;current.size=size.value;current.price=price.value;current.description=description.value;current.accounts=getSelectedAccounts();current.account=current.accounts[0]||'';current.condition=condition.value;
- const idx=listings.findIndex(x=>x.id===current.id); if(idx>=0) listings[idx]=current; else listings.push(current);
- localStorage.setItem('lm_listings',JSON.stringify(listings));
- show('home'); renderHome(); toast(idx>=0?'✓ Anuncio actualizado':'✓ Anuncio creado correctamente');
+ try{
+  current.name=document.getElementById('name').value.trim();
+  current.brand=document.getElementById('brand').value.trim();
+  current.size=document.getElementById('size').value.trim();
+  current.price=document.getElementById('price').value;
+  current.description=document.getElementById('description').value.trim();
+  current.accounts=getSelectedAccounts();
+  current.account=current.accounts[0]||'';
+  current.condition=document.getElementById('condition').value;
+  const idx=listings.findIndex(x=>x.id===current.id);
+  if(idx>=0) listings[idx]=current; else listings.push(current);
+  localStorage.setItem('lm_listings',JSON.stringify(listings));
+  renderHome();
+  show('home');
+  const msg=idx>=0?'✓ Anuncio actualizado correctamente':'✓ ¡Anuncio creado correctamente!';
+  toast(msg);
+  setTimeout(()=>toast(''),2600);
+ }catch(err){ console.error(err); alert('No se pudo guardar el anuncio. '+(err.message||'')); }
 }
+
 async function addSelectedPhotos(fileList){
  for(const f of fileList){current.photos.push(await fileToDataURL(f))}
  renderPhotoGrid(current.photos);
@@ -158,45 +178,56 @@ cameraInput.addEventListener('change', e=>{ addSelectedPhotos(e.target.files); e
 function renderPhotoGrid(arr){photoGrid.innerHTML=arr.map(p=>`<img src="${p}">`).join('')}
 function openPrivacy(i){current=listings[i];document.getElementById('privacyGrid').innerHTML=current.photos.map(p=>`<img src="${p}">`).join('');show('privacy')}
 async function processPhotos(){
- if(!current.photos.length){toast('Este anuncio no tiene fotos');return}
- const rot=+rotation.value,crop=+crop.value;
+ if(!current || !current.photos.length){toast('Este anuncio no tiene fotos');return}
+ const rot=+document.getElementById('rotation').value,crop=+document.getElementById('crop').value;
  const area=document.getElementById('processedArea');
  area.classList.remove('hidden');
- area.innerHTML='<div class="card"><b>Procesando…</b><p class="muted">Preparando todas las fotos en este dispositivo.</p></div>';
+ area.innerHTML='<div class="card"><b>Procesando todas las fotos…</b><p class="muted">La edición se hace directamente en tu iPhone mediante Canvas. No se suben a ningún servidor.</p></div>';
  try{
-   const out=await Promise.all(current.photos.map(src=>processImage(src,rot,crop)));
+   const out=[];
+   for(const src of current.photos) out.push(await processImage(src,rot,crop));
    window.__processedBlobs=out;
-   area.innerHTML='<div class="card"><h3>✓ '+out.length+' fotos listas</h3><p class="muted">Ahora puedes compartirlas todas juntas o descargar un único ZIP.</p><div class="actions"><button type="button" onclick="shareAllProcessed()">📤 Guardar todas en Fotos</button><button type="button" class="secondary" onclick="downloadZip()">⬇️ Descargar ZIP</button></div><div id="processedList" class="grid"></div></div>';
+   area.innerHTML='<div class="card"><h3>✓ '+out.length+' fotos procesadas</h3><p class="muted">Cada foto es un JPG nuevo. El canvas genera una copia y elimina los metadatos EXIF habituales.</p><div class="actions"><button type="button" onclick="shareAllProcessed()">📤 Compartir / Guardar todas</button><button type="button" class="secondary" onclick="downloadZip()">⬇️ Crear ZIP con todas</button></div><div id="processedList" style="display:grid;gap:10px;margin-top:14px"></div></div>';
    const list=document.getElementById('processedList');
    out.forEach((blob,i)=>{
      const url=URL.createObjectURL(blob);
-     const item=document.createElement('div');
-     item.innerHTML=`<img src="${url}" alt="Foto procesada ${i+1}" onclick="openProcessed('${url}')">`;
-     list.appendChild(item);
+     const row=document.createElement('div');
+     row.style.cssText='display:flex;gap:10px;align-items:center;background:#0c0c10;border:1px solid #292932;border-radius:12px;padding:8px';
+     row.innerHTML=`<img src="${url}" style="width:76px;height:76px;object-fit:cover;border-radius:9px"><div style="flex:1"><b>Foto ${i+1}</b><div class="small">JPG procesado</div></div><button type="button" class="secondary" onclick="openProcessed('${url}')">Abrir</button>`;
+     list.appendChild(row);
    });
  }catch(err){
-   console.error(err);area.innerHTML='<div class="card"><b>Ha ocurrido un error.</b><p class="muted">Vuelve a intentarlo desde Safari.</p></div>';
+   console.error(err);
+   area.innerHTML='<div class="card"><b>Ha ocurrido un error al procesar.</b><p class="muted">Prueba con una sola foto primero. Si sigue fallando, abre la página directamente en Safari.</p></div>';
  }
 }
+
 async function shareAllProcessed(){
  const blobs=window.__processedBlobs||[];
- if(!blobs.length)return;
+ if(!blobs.length){toast('Primero procesa las fotos');return}
  try{
-   const files=blobs.map((b,i)=>new File([b],`listing_${current.id}_${i+1}.jpg`,{type:'image/jpeg'}));
-   if(navigator.share && (!navigator.canShare || navigator.canShare({files}))){
-     await navigator.share({files,title:'Fotos procesadas'});
-     toast('✓ Menú de compartir abierto');
+   const shareFiles=blobs.map((b,i)=>new File([b],`listing_${current.id}_foto_${i+1}.jpg`,{type:'image/jpeg'}));
+   if(navigator.share && navigator.canShare && navigator.canShare({files:shareFiles})){
+      await navigator.share({files:shareFiles,title:'Fotos procesadas'});
+      toast('✓ Fotos listas para guardar');
+   }else if(navigator.share){
+      // Some iOS versions support sharing but not multiple files. Share one by one is not reliable, so use ZIP.
+      await downloadZip();
    }else{
-     // iOS may not expose multi-file sharing in a PWA; provide a clear fallback.
-     downloadZip();
+      await downloadZip();
    }
- }catch(e){if(e.name!=='AbortError') toast('No se pudo abrir Compartir');}
+ }catch(e){
+   if(e && e.name==='AbortError') return;
+   toast('No se pudo abrir el menú. Hemos preparado el ZIP.');
+   await downloadZip();
+ }
 }
+
 function openProcessed(url){
- const w=window.open();
- if(w){w.document.write('<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><body style="margin:0;background:#000;display:grid;place-items:center;height:100vh"><img src="'+url+'" style="max-width:100%;max-height:100%;object-fit:contain"></body>');w.document.close();}
- else location.href=url;
+ const w=window.open(url,'_blank');
+ if(!w){ location.href=url; }
 }
+
 function crc32(buf){
  let table=window.__crcTable;
  if(!table){table=[];for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=(c&1)?(0xedb88320^(c>>>1)):(c>>>1);table[n]=c>>>0}window.__crcTable=table}
@@ -218,10 +249,26 @@ async function makeZip(blobs){
  return new Blob([body],{type:'application/zip'});
 }
 async function downloadZip(){
- const blobs=window.__processedBlobs||[];if(!blobs.length){toast('Primero procesa las fotos');return}
- const zip=await makeZip(blobs),url=URL.createObjectURL(zip),a=document.createElement('a');
- a.href=url;a.download=`listing_${current.id}_fotos.zip`;document.body.appendChild(a);a.click();a.remove();
- setTimeout(()=>URL.revokeObjectURL(url),10000);toast('✓ ZIP preparado. Revisa Descargas/Archivos');
+ const blobs=window.__processedBlobs||[];
+ if(!blobs.length){toast('Primero procesa las fotos');return}
+ try{
+   const zip=await makeZip(blobs);
+   const url=URL.createObjectURL(zip);
+   const a=document.createElement('a');
+   a.href=url;
+   a.download=`listing_${current.id}_fotos.zip`;
+   a.target='_blank';
+   a.rel='noopener';
+   a.textContent='Abrir ZIP';
+   a.style.display='none';
+   document.body.appendChild(a);
+   a.click();
+   setTimeout(()=>{a.remove();URL.revokeObjectURL(url)},15000);
+   toast('✓ ZIP creado con todas las fotos');
+ }catch(err){
+   console.error(err);
+   toast('No se pudo crear el ZIP');
+ }
 }
 
 function processImage(src,deg,crop){

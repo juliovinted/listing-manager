@@ -22,9 +22,10 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 <body>
 <header><div class="brand"><div class="logo">LM</div><div><h1>Listing Manager</h1><div class="sub">Private workspace · iPhone</div></div></div></header>
 <div class="wrap">
-<div class="nav">
+<div class="nav" style="grid-template-columns:1fr 1fr 1fr 1fr">
 <button onclick="show('home')">Anuncios</button>
 <button onclick="newListing()">+ Nuevo</button>
+<button onclick="showAI()">✨ IA</button>
 <button onclick="showAccounts()">👤 Cuentas</button>
 </div>
 
@@ -74,6 +75,38 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 </div>
 </section>
 
+<section id="ai" class="hidden">
+<div class="card">
+<h2>✨ Generador de anuncios con IA</h2>
+<p class="muted">Sube una o varias fotos, añade los datos que conozcas y genera un título y una descripción en inglés optimizados para Vinted.</p>
+<label>FOTOS DE LA PRENDA</label>
+<div class="actions"><button type="button" onclick="aiPhotoInput.click()">📸 Añadir fotos</button></div>
+<input id="aiPhotoInput" type="file" accept="image/*" multiple class="hidden">
+<div id="aiPhotoGrid" class="grid"></div>
+<label>Marca (opcional)</label><input id="aiBrand" placeholder="Nike">
+<label>Talla</label><input id="aiSize" placeholder="M">
+<label>Color (opcional)</label><input id="aiColor" placeholder="Dark grey">
+<label>Detalles extra (opcional)</label><input id="aiExtra" placeholder="Oversized, measurements in photos...">
+<div class="actions"><button type="button" onclick="generateAIListing()">✨ Generar título + descripción</button><button type="button" class="secondary" onclick="clearAI()">Limpiar</button></div>
+<div id="aiStatus" class="small" style="margin-top:10px"></div>
+</div>
+<div id="aiResult" class="card hidden">
+<h3>Resultado</h3>
+<label>TÍTULO</label>
+<input id="aiTitle" readonly>
+<div class="actions"><button type="button" class="secondary" onclick="copyAIField('aiTitle')">📋 Copiar título</button></div>
+<label>DESCRIPCIÓN</label>
+<textarea id="aiDescription" readonly style="width:100%;min-height:260px;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:#0c0c10;color:var(--text);font:inherit;resize:vertical;margin:7px 0 10px"></textarea>
+<div class="actions"><button type="button" class="secondary" onclick="copyAIField('aiDescription')">📋 Copiar descripción</button><button type="button" onclick="useAIInNewListing()">➕ Usar en nuevo anuncio</button></div>
+</div>
+<div class="card">
+<h3>🧠 IA local y gratuita</h3>
+<p class="muted">Esta prueba ejecuta el modelo directamente en tu navegador. No necesita API key ni backend. La primera vez tendrá que descargar el modelo y puede tardar un poco.</p>
+<p class="small">Si tu navegador dispone de WebGPU intentará usarlo; si no, utilizará el modo CPU/WASM. El modelo se guarda en la caché del navegador cuando es posible.</p>
+</div>
+<div class="actions"><button type="button" class="secondary" onclick="show('home')">Volver</button></div>
+</section>
+
 <section id="accounts" class="hidden">
 <div class="card">
 <h2>Gestionar cuentas</h2>
@@ -112,6 +145,34 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 let listings=[];
 let current=null, files=[];
 let dbPromise=null;
+let aiPhotos=[];
+const AI_PROMPT=`You are an expert Vinted listing assistant specialized in creating high-converting titles and descriptions for second-hand and vintage clothing.
+
+The user will provide a photo of a clothing item and/or basic information such as brand, size, color, style or measurements. Analyze the garment visually and create a Vinted listing in ENGLISH.
+
+IMPORTANT RULES:
+1. TITLE: Maximum 100 characters. Always try to use as close to 100 characters as possible without irrelevant words. Prioritize brand, garment type, model/style, color, fit, era/style keywords and relevant popular keywords such as vintage, Y2K, retro, streetwear, oversized, grunge, etc. Do not invent a brand, specific model, collection, material, era or provenance that cannot reasonably be established. If unbranded, do not mention unbranded unless necessary.
+2. DESCRIPTION: Use exactly this structure:
+[ITEM NAME]
+
+🏷️ Brand: [brand]
+📏 Size: [size]
+🎨 Color: [color]
+[OPTIONAL relevant category emoji]: [Style description]
+✅ Condition: Please check the photos for details.
+📸 Please refer to the photos for the item’s exact condition. Any flaws or signs of wear, if present, are shown as clearly as possible.
+📦 Fast & safe shipping ✅
+💬 Feel free to ask any questions! 😊
+
+#keyword #keyword #keyword ...
+3. Style description must be attractive but factual. Mention visible design, aesthetics, fit and outfit uses only when appropriate. Never claim authenticity, rarity, exact age, fabric composition or designer provenance without evidence.
+4. Use exactly the provided size. If approximate, write e.g. L approx. If exact measurements are shown in photos, write: 📏 Size: [size] — Exact measurements are shown in the photos.
+5. Brand: use only if provided or clearly readable. Never guess.
+6. Color: identify main visible colors with natural fashion terminology.
+7. Hashtags: English only, lowercase, relevant and varied across brand, garment type, color, style, aesthetic, fit, category and model keywords.
+8. Ignore jeans or other garments used as background/styling props unless the user says they are included.
+9. User-provided instructions have priority.
+10. Output ONLY valid JSON with exactly two string fields: title and description. No markdown fences.`;
 
 function openDB(){
  if(!('indexedDB' in window)) return Promise.reject(new Error('IndexedDB no disponible'));
@@ -331,6 +392,111 @@ galleryInput.addEventListener('change', async e=>{
  e.target.value='';
 });
 function renderPhotoGrid(arr){photoGrid.innerHTML=arr.map(p=>`<img src="${p}">`).join('')}
+function showAI(){
+ show('ai');
+}
+function clearAI(){
+ aiPhotos=[]; document.getElementById('aiPhotoGrid').innerHTML='';
+ ['aiBrand','aiSize','aiColor','aiExtra','aiTitle','aiDescription'].forEach(id=>document.getElementById(id).value='');
+ document.getElementById('aiResult').classList.add('hidden');
+ document.getElementById('aiStatus').textContent='';
+}
+function renderAIPhotos(){
+ document.getElementById('aiPhotoGrid').innerHTML=aiPhotos.map(p=>`<img src="${p}" alt="Foto de la prenda">`).join('');
+}
+async function fileToDataURL(file){
+ return await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file);});
+}
+document.getElementById('aiPhotoInput').addEventListener('change',async e=>{
+ try{ aiPhotos=await Promise.all(Array.from(e.target.files||[]).slice(0,4).map(fileToDataURL)); renderAIPhotos(); }
+ catch(err){console.error(err);alert('No se pudieron cargar las fotos.');}
+ e.target.value='';
+});
+
+let localAIPipeline=null;
+let localAILoading=null;
+async function getLocalAIPipeline(status){
+ if(localAIPipeline) return localAIPipeline;
+ if(localAILoading) return localAILoading;
+ localAILoading=(async()=>{
+   status.textContent='⏳ Cargando la IA local… La primera vez puede tardar y descargar el modelo.';
+   const mod=await import('https://esm.sh/@huggingface/transformers@4.0.0');
+   const {pipeline,env}=mod;
+   env.allowLocalModels=false;
+   env.useBrowserCache=true;
+   const useGPU=typeof navigator!=='undefined' && 'gpu' in navigator;
+   const options={dtype:'q4'};
+   if(useGPU) options.device='webgpu';
+   try{
+     localAIPipeline=await pipeline('image-text-to-text','HuggingFaceTB/SmolVLM-256M-Instruct',options);
+   }catch(firstErr){
+     if(useGPU){
+       status.textContent='⏳ WebGPU no ha podido cargar el modelo; probando modo CPU…';
+       localAIPipeline=await pipeline('image-text-to-text','HuggingFaceTB/SmolVLM-256M-Instruct',{dtype:'q4'});
+     }else throw firstErr;
+   }
+   return localAIPipeline;
+ })();
+ try{return await localAILoading;}finally{localAILoading=null;}
+}
+function extractAIText(output){
+ let x=output;
+ if(Array.isArray(x)) x=x[0];
+ if(x && Array.isArray(x.generated_text)) x=x.generated_text.at(-1);
+ if(x && typeof x==='object' && x.generated_text!=null) x=x.generated_text;
+ if(typeof x!=='string') x=JSON.stringify(x);
+ return String(x||'').trim();
+}
+function cleanGeneratedListing(text){
+ let t=text.replace(/^```[\s\S]*?\n|```$/g,'').trim();
+ const titleMatch=t.match(/(?:^|\n)TITLE\s*:\s*(.*)/i);
+ const descMatch=t.match(/(?:^|\n)DESCRIPTION\s*:\s*([\s\S]*)/i);
+ if(titleMatch && descMatch) return {title:titleMatch[1].trim().slice(0,100),description:descMatch[1].trim()};
+ const lines=t.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+ return {title:(lines[0]||'').replace(/^title\s*[:\-]?\s*/i,'').slice(0,100),description:lines.slice(1).join('\n').replace(/^description\s*[:\-]?\s*/i,'').trim()};
+}
+async function generateAIListing(){
+ if(!aiPhotos.length){alert('Sube al menos una foto de la prenda.');return}
+ const size=document.getElementById('aiSize').value.trim();
+ if(!size){alert('Indica la talla.');return}
+ const brand=document.getElementById('aiBrand').value.trim();
+ const color=document.getElementById('aiColor').value.trim();
+ const extra=document.getElementById('aiExtra').value.trim();
+ const status=document.getElementById('aiStatus');
+ try{
+   const model=await getLocalAIPipeline(status);
+   status.textContent='🔎 Analizando la prenda y redactando el anuncio…';
+   const content=[];
+   aiPhotos.forEach(src=>content.push({type:'image',image:src}));
+   content.push({type:'text',text:`${AI_PROMPT}\n\nReturn ONLY this exact format:\nTITLE: [one optimized English title, max 100 characters]\nDESCRIPTION: [the complete English description]\n\nKnown user information (use it exactly; do not invent missing facts):\nBrand: ${brand||'not provided'}\nSize: ${size}\nColor: ${color||'not provided'}\nExtra instructions: ${extra||'none'}\n\nAnalyze the clothing in the photos first. Do not treat jeans, furniture, backgrounds or styling props as part of the item. If the brand is not provided and not clearly readable, do not invent it.`});
+   const messages=[{role:'user',content}];
+   const out=await model(messages,{max_new_tokens:420,return_full_text:false});
+   const parsed=cleanGeneratedListing(extractAIText(out));
+   if(!parsed.title||!parsed.description) throw new Error('La IA no devolvió un resultado válido.');
+   document.getElementById('aiTitle').value=parsed.title;
+   document.getElementById('aiDescription').value=parsed.description;
+   document.getElementById('aiResult').classList.remove('hidden');
+   status.textContent='✓ Anuncio generado localmente · 0 €';
+ }catch(err){
+   console.error(err);
+   status.textContent='';
+   alert('No se pudo ejecutar la IA local. Puede que tu navegador no tenga suficiente memoria o que este modelo todavía no sea compatible con tu dispositivo.\n\n'+(err.message||'Error desconocido'));
+ }
+}
+async function copyAIField(id){
+ const el=document.getElementById(id), value=el.value||'';
+ if(!value)return;
+ try{await navigator.clipboard.writeText(value);toast('✓ Copiado al portapapeles');}
+ catch(e){el.focus();el.select();document.execCommand('copy');toast('✓ Copiado al portapapeles');}
+}
+function useAIInNewListing(){
+ newListing();
+ document.getElementById('name').value=document.getElementById('aiTitle').value;
+ document.getElementById('description').value=document.getElementById('aiDescription').value;
+ document.getElementById('brand').value=document.getElementById('aiBrand').value.trim();
+ document.getElementById('size').value=document.getElementById('aiSize').value.trim();
+ if(aiPhotos.length){ current.photos=aiPhotos.slice(); renderPhotoGrid(current.photos); }
+}
 function openPrivacy(i){current=listings[i];document.getElementById('privacyGrid').innerHTML=current.photos.map(p=>`<img src="${p}">`).join('');show('privacy')}
 async function processPhotos(){
  if(!current || !current.photos.length){toast('Este anuncio no tiene fotos');return}

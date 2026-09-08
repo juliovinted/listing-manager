@@ -47,11 +47,9 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 <label>Descripción</label><input id="description" placeholder="Descripción del artículo">
 <label>Fotos</label>
 <div class="actions">
-<button type="button" onclick="galleryInput.click()">🖼️ Galería</button>
-<button type="button" class="secondary" onclick="cameraInput.click()">📷 Cámara</button>
+<button type="button" onclick="galleryInput.click()">➕ Añadir fotos</button>
 </div>
 <input id="galleryInput" type="file" accept="image/*" multiple class="hidden">
-<input id="cameraInput" type="file" accept="image/*" capture="environment" class="hidden">
 <div id="photoGrid" class="grid"></div>
 <div class="actions">
 <button onclick="saveListing()">Guardar anuncio</button>
@@ -170,11 +168,18 @@ function saveListing(){
 }
 
 async function addSelectedPhotos(fileList){
- for(const f of fileList){current.photos.push(await fileToDataURL(f))}
+ const selected=Array.from(fileList||[]);
+ if(!selected.length) return;
+ // Procesamos todas las fotos seleccionadas en paralelo para que no se pierda ninguna.
+ const data=await Promise.all(selected.map(fileToDataURL));
+ current.photos.push(...data);
  renderPhotoGrid(current.photos);
 }
-galleryInput.addEventListener('change', e=>{ addSelectedPhotos(e.target.files); e.target.value=''; });
-cameraInput.addEventListener('change', e=>{ addSelectedPhotos(e.target.files); e.target.value=''; });
+galleryInput.addEventListener('change', async e=>{
+ try{ await addSelectedPhotos(e.target.files); }
+ catch(err){ console.error(err); alert('No se pudieron añadir las fotos.'); }
+ e.target.value='';
+});
 function renderPhotoGrid(arr){photoGrid.innerHTML=arr.map(p=>`<img src="${p}">`).join('')}
 function openPrivacy(i){current=listings[i];document.getElementById('privacyGrid').innerHTML=current.photos.map(p=>`<img src="${p}">`).join('');show('privacy')}
 async function processPhotos(){
@@ -272,19 +277,56 @@ async function downloadZip(){
 }
 
 function processImage(src,deg,crop){
- return new Promise(resolve=>{
-  const img=new Image();img.onload=()=>{
-   const rad=deg*Math.PI/180, s=Math.abs(Math.sin(rad)),c=Math.abs(Math.cos(rad));
-   const nw=Math.ceil(img.width*c+img.height*s),nh=Math.ceil(img.width*s+img.height*c);
-   const full=document.createElement('canvas');full.width=nw;full.height=nh;
-   const fctx=full.getContext('2d');fctx.translate(nw/2,nh/2);fctx.rotate(rad);fctx.drawImage(img,-img.width/2,-img.height/2);
-   const outW=Math.max(1,nw-2*crop),outH=Math.max(1,nh-2*crop);
-   const canvas=document.createElement('canvas');canvas.width=outW;canvas.height=outH;
-   const ctx=canvas.getContext('2d');ctx.drawImage(full,crop,crop,outW,outH,0,0,outW,outH);
-   canvas.toBlob(resolve,'image/jpeg',0.95);
-  };img.src=src;
+ return new Promise((resolve,reject)=>{
+  const img=new Image();
+  img.onload=()=>{
+   try{
+    const rad=deg*Math.PI/180;
+    const sin=Math.abs(Math.sin(rad)), cos=Math.abs(Math.cos(rad));
+    const nw=Math.ceil(img.width*cos+img.height*sin);
+    const nh=Math.ceil(img.width*sin+img.height*cos);
+
+    // Rotamos en un canvas transparente. Después recortamos automáticamente
+    // al mayor rectángulo con la misma proporción que la foto original,
+    // eliminando las esquinas que quedarían vacías/negro.
+    const full=document.createElement('canvas');
+    full.width=nw; full.height=nh;
+    const fctx=full.getContext('2d');
+    fctx.clearRect(0,0,nw,nh);
+    fctx.translate(nw/2,nh/2);
+    fctx.rotate(rad);
+    fctx.drawImage(img,-img.width/2,-img.height/2);
+
+    const aspect=img.width/img.height;
+    let baseW=nw, baseH=nh;
+    if(nw/nh > aspect) baseW=Math.floor(nh*aspect);
+    else baseH=Math.floor(nw/aspect);
+
+    // Aplicar además el recorte manual solicitado.
+    const maxCropX=Math.max(0,(baseW-2*crop));
+    const maxCropY=Math.max(0,(baseH-2*crop));
+    const outW=Math.max(1,maxCropX);
+    const outH=Math.max(1,maxCropY);
+    const sx=(nw-baseW)/2+crop;
+    const sy=(nh-baseH)/2+crop;
+
+    const canvas=document.createElement('canvas');
+    canvas.width=outW; canvas.height=outH;
+    const ctx=canvas.getContext('2d');
+    // Fondo transparente por seguridad; al convertir a JPEG lo evitamos
+    // recortando antes, así no aparecen esquinas negras.
+    ctx.clearRect(0,0,outW,outH);
+    ctx.drawImage(full,sx,sy,outW,outH,0,0,outW,outH);
+    canvas.toBlob(blob=>{
+      if(blob) resolve(blob); else reject(new Error('No se pudo generar la imagen'));
+    },'image/jpeg',0.95);
+   }catch(err){reject(err);}
+  };
+  img.onerror=()=>reject(new Error('No se pudo cargar una de las fotos'));
+  img.src=src;
  });
 }
+
 function deleteListing(i){if(confirm('¿Borrar este anuncio?')){listings.splice(i,1);localStorage.setItem('lm_listings',JSON.stringify(listings));renderHome()}}
 function fileToDataURL(f){return new Promise((r,j)=>{const x=new FileReader();x.onload=()=>r(x.result);x.onerror=j;x.readAsDataURL(f)})}
 let accounts=JSON.parse(localStorage.getItem('lm_accounts')||'["Mi cuenta","Cuenta hermana","Cuenta primo"]');

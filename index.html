@@ -40,8 +40,8 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 <label>Marca</label><input id="brand" placeholder="Nike">
 <label>Talla</label><input id="size" placeholder="M">
 <label>Precio (€)</label><input id="price" type="number" step="0.01" placeholder="25">
-<label>Cuenta</label>
-<select id="account"><option>Mi cuenta</option><option>Cuenta hermana</option><option>Cuenta primo</option></select>
+<label>CUENTAS DONDE ESTÁ SUBIDO</label>
+<div id="accountChecks" style="display:grid;gap:8px;margin:7px 0 14px"></div>
 <label>Estado</label>
 <select id="condition"><option>Nuevo</option><option>Muy bueno</option><option>Bueno</option></select>
 <label>Descripción</label><input id="description" placeholder="Descripción del artículo">
@@ -92,10 +92,31 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 </div>
 </section>
 </div>
+<div id="toast" class="hidden" style="position:fixed;left:16px;right:16px;bottom:22px;z-index:99;background:#f5f5f7;color:#09090b;padding:14px 16px;border-radius:15px;font-weight:800;box-shadow:0 18px 45px #0008;text-align:center"></div>
 
 <script>
 let listings=JSON.parse(localStorage.getItem('lm_listings')||'[]');
 let current=null, files=[];
+
+function toast(message){
+ const t=document.getElementById('toast');t.textContent=message;t.classList.remove('hidden');
+ clearTimeout(window.__toast);window.__toast=setTimeout(()=>t.classList.add('hidden'),2200);
+}
+function getSelectedAccounts(){
+ return [...document.querySelectorAll('#accountChecks input[type=checkbox]:checked')].map(x=>x.value);
+}
+function renderAccountChecks(selected=[]){
+ const box=document.getElementById('accountChecks');
+ if(!accounts.length){box.innerHTML='<div class="muted">Crea una cuenta primero.</div>';return}
+ box.innerHTML=accounts.map(a=>`<label style="display:flex;align-items:center;gap:9px;padding:11px 12px;background:#0c0c10;border:1px solid #292932;border-radius:12px;color:#eee">
+ <input type="checkbox" value="${esc(a)}" ${selected.includes(a)?'checked':''} style="width:auto;margin:0;accent-color:#b8ff3d">
+ <span>${esc(a)}</span></label>`).join('');
+}
+function setSelectedAccounts(selected){renderAccountChecks(selected||[])}
+function accountSummary(l){
+ const arr=Array.isArray(l.accounts)?l.accounts:(l.account?[l.account]:[]);
+ return arr.length?arr.join(' · '):'Sin cuenta asignada';
+}
 
 function show(id){
   ['home','editor','privacy','accounts'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id));
@@ -106,7 +127,7 @@ function newListing(){
 }
 function clearForm(){
  ['name','brand','size','price','description'].forEach(id=>document.getElementById(id).value='');
- refreshAccountSelect(); document.getElementById('account').value=accounts[0]||'';document.getElementById('condition').value='Nuevo';
+ renderAccountChecks([]);document.getElementById('condition').value='Nuevo';
  document.getElementById('photoGrid').innerHTML='';
 }
 function renderHome(){
@@ -114,18 +135,19 @@ function renderHome(){
  if(!listings.length){el.innerHTML='<div class="card empty">Todavía no tienes anuncios.<br><br>Pulsa <b>+ Nuevo</b> para crear el primero.</div>';return}
  el.innerHTML=listings.map((l,i)=>`<div class="card">
  <div class="row"><div><b>${esc(l.name||'Sin título')}</b><div class="muted">${esc(l.brand||'')} · ${esc(l.size||'')}</div></div><b>${Number(l.price||0).toFixed(2)} €</b></div>
- <span class="tag">${esc(l.account)}</span> <span class="tag">${esc(l.condition)}</span>
+ <span class="tag">👤 ${esc(accountSummary(l))}</span> <span class="tag">${esc(l.condition)}</span>
  ${l.photos.length?'<div class="grid">'+l.photos.map(p=>`<img src="${p}">`).join('')+'</div>':''}
  <div class="actions"><button onclick="editListing(${i})">Editar</button><button class="secondary" onclick="openPrivacy(${i})">🔒 Privacidad / fotos</button><button class="danger" onclick="deleteListing(${i})">Borrar</button></div>
  </div>`).join('');
 }
 function editListing(i){
- current=listings[i]; files=[]; document.getElementById('name').value=current.name||'';document.getElementById('brand').value=current.brand||'';document.getElementById('size').value=current.size||'';document.getElementById('price').value=current.price||'';document.getElementById('description').value=current.description||'';document.getElementById('account').value=current.account||'Mi cuenta';document.getElementById('condition').value=current.condition||'Nuevo';renderPhotoGrid(current.photos);show('editor');
+ current=listings[i]; files=[]; document.getElementById('name').value=current.name||'';document.getElementById('brand').value=current.brand||'';document.getElementById('size').value=current.size||'';document.getElementById('price').value=current.price||'';document.getElementById('description').value=current.description||'';renderAccountChecks(current.accounts || (current.account?[current.account]:[]));document.getElementById('condition').value=current.condition||'Nuevo';renderPhotoGrid(current.photos);show('editor');
 }
 function saveListing(){
- current.name=name.value;current.brand=brand.value;current.size=size.value;current.price=price.value;current.description=description.value;current.account=account.value;current.condition=condition.value;
+ current.name=name.value;current.brand=brand.value;current.size=size.value;current.price=price.value;current.description=description.value;current.accounts=getSelectedAccounts();current.account=current.accounts[0]||'';current.condition=condition.value;
  const idx=listings.findIndex(x=>x.id===current.id); if(idx>=0) listings[idx]=current; else listings.push(current);
- localStorage.setItem('lm_listings',JSON.stringify(listings));show('home');
+ localStorage.setItem('lm_listings',JSON.stringify(listings));
+ show('home'); renderHome(); toast(idx>=0?'✓ Anuncio actualizado':'✓ Anuncio creado correctamente');
 }
 async function addSelectedPhotos(fileList){
  for(const f of fileList){current.photos.push(await fileToDataURL(f))}
@@ -136,44 +158,70 @@ cameraInput.addEventListener('change', e=>{ addSelectedPhotos(e.target.files); e
 function renderPhotoGrid(arr){photoGrid.innerHTML=arr.map(p=>`<img src="${p}">`).join('')}
 function openPrivacy(i){current=listings[i];document.getElementById('privacyGrid').innerHTML=current.photos.map(p=>`<img src="${p}">`).join('');show('privacy')}
 async function processPhotos(){
- if(!current.photos.length){alert('Este anuncio no tiene fotos.');return}
+ if(!current.photos.length){toast('Este anuncio no tiene fotos');return}
  const rot=+rotation.value,crop=+crop.value;
  const area=document.getElementById('processedArea');
  area.classList.remove('hidden');
- area.innerHTML='<div class="card"><b>Procesando…</b><p class="muted">Preparando tus copias en este dispositivo.</p></div>';
+ area.innerHTML='<div class="card"><b>Procesando…</b><p class="muted">Preparando todas las fotos en este dispositivo.</p></div>';
  try{
    const out=await Promise.all(current.photos.map(src=>processImage(src,rot,crop)));
-   area.innerHTML='<div class="card"><h3>✓ Fotos preparadas</h3><p class="muted">Toca una foto y usa el botón para abrirla. Después mantén pulsada la imagen y elige «Guardar en Fotos».</p><div id="processedList"></div></div>';
+   window.__processedBlobs=out;
+   area.innerHTML='<div class="card"><h3>✓ '+out.length+' fotos listas</h3><p class="muted">Ahora puedes compartirlas todas juntas o descargar un único ZIP.</p><div class="actions"><button type="button" onclick="shareAllProcessed()">📤 Guardar todas en Fotos</button><button type="button" class="secondary" onclick="downloadZip()">⬇️ Descargar ZIP</button></div><div id="processedList" class="grid"></div></div>';
    const list=document.getElementById('processedList');
    out.forEach((blob,i)=>{
      const url=URL.createObjectURL(blob);
      const item=document.createElement('div');
-     item.className='card';
-     item.innerHTML=`<img class="preview" src="${url}" alt="Foto procesada ${i+1}">
-       <div class="actions">
-        <button type="button" onclick="openProcessed('${url}')">🖼️ Abrir foto</button>
-        <button type="button" class="secondary" onclick="shareProcessed('${url}','listing_${current.id}_${i+1}.jpg')">📤 Compartir</button>
-       </div>`;
+     item.innerHTML=`<img src="${url}" alt="Foto procesada ${i+1}" onclick="openProcessed('${url}')">`;
      list.appendChild(item);
    });
  }catch(err){
-   console.error(err);
-   area.innerHTML='<div class="card"><b>Ha ocurrido un error.</b><p class="muted">Vuelve a intentarlo desde Safari.</p></div>';
+   console.error(err);area.innerHTML='<div class="card"><b>Ha ocurrido un error.</b><p class="muted">Vuelve a intentarlo desde Safari.</p></div>';
  }
+}
+async function shareAllProcessed(){
+ const blobs=window.__processedBlobs||[];
+ if(!blobs.length)return;
+ try{
+   const files=blobs.map((b,i)=>new File([b],`listing_${current.id}_${i+1}.jpg`,{type:'image/jpeg'}));
+   if(navigator.share && (!navigator.canShare || navigator.canShare({files}))){
+     await navigator.share({files,title:'Fotos procesadas'});
+     toast('✓ Menú de compartir abierto');
+   }else{
+     // iOS may not expose multi-file sharing in a PWA; provide a clear fallback.
+     downloadZip();
+   }
+ }catch(e){if(e.name!=='AbortError') toast('No se pudo abrir Compartir');}
 }
 function openProcessed(url){
  const w=window.open();
  if(w){w.document.write('<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><body style="margin:0;background:#000;display:grid;place-items:center;height:100vh"><img src="'+url+'" style="max-width:100%;max-height:100%;object-fit:contain"></body>');w.document.close();}
- else {location.href=url;}
+ else location.href=url;
 }
-async function shareProcessed(url,name){
- try{
-  const r=await fetch(url); const blob=await r.blob();
-  const file=new File([blob],name,{type:'image/jpeg'});
-  if(navigator.share && (!navigator.canShare || navigator.canShare({files:[file]}))){
-    await navigator.share({files:[file],title:'Foto procesada'});
-  }else{openProcessed(url);alert('Mantén pulsada la imagen y pulsa «Guardar en Fotos».');}
- }catch(e){if(e.name!=='AbortError'){openProcessed(url);}}
+function crc32(buf){
+ let table=window.__crcTable;
+ if(!table){table=[];for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=(c&1)?(0xedb88320^(c>>>1)):(c>>>1);table[n]=c>>>0}window.__crcTable=table}
+ let c=0xffffffff;for(let i=0;i<buf.length;i++)c=table[(c^buf[i])&255]^(c>>>8);return (c^0xffffffff)>>>0;
+}
+function u16(n){return new Uint8Array([n&255,(n>>>8)&255])}
+function u32(n){return new Uint8Array([n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255])}
+function concatBytes(parts){let len=parts.reduce((s,x)=>s+x.length,0),out=new Uint8Array(len),o=0;for(const x of parts){out.set(x,o);o+=x.length}return out}
+async function makeZip(blobs){
+ const parts=[],central=[];let offset=0;
+ for(let i=0;i<blobs.length;i++){
+   const data=new Uint8Array(await blobs[i].arrayBuffer()),name=new TextEncoder().encode(`listing_${current.id}_${i+1}.jpg`),crc=crc32(data);
+   const local=concatBytes([new Uint8Array([80,75,3,4]),u16(20),u16(0),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(name.length),u16(0),name,data]);
+   parts.push(local);
+   const cen=concatBytes([new Uint8Array([80,75,1,2]),u16(20),u16(20),u16(0),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(name.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(offset),name]);
+   central.push(cen);offset+=local.length;
+ }
+ const cdata=concatBytes(central),body=concatBytes(parts.concat([cdata,new Uint8Array([80,75,5,6]),u16(0),u16(0),u16(blobs.length),u16(blobs.length),u32(cdata.length),u32(offset),u16(0)]));
+ return new Blob([body],{type:'application/zip'});
+}
+async function downloadZip(){
+ const blobs=window.__processedBlobs||[];if(!blobs.length){toast('Primero procesa las fotos');return}
+ const zip=await makeZip(blobs),url=URL.createObjectURL(zip),a=document.createElement('a');
+ a.href=url;a.download=`listing_${current.id}_fotos.zip`;document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),10000);toast('✓ ZIP preparado. Revisa Descargas/Archivos');
 }
 
 function processImage(src,deg,crop){
@@ -195,12 +243,7 @@ function fileToDataURL(f){return new Promise((r,j)=>{const x=new FileReader();x.
 let accounts=JSON.parse(localStorage.getItem('lm_accounts')||'["Mi cuenta","Cuenta hermana","Cuenta primo"]');
 
 function saveAccounts(){localStorage.setItem('lm_accounts',JSON.stringify(accounts));}
-function refreshAccountSelect(){
- const sel=document.getElementById('account');
- const currentValue=sel.value;
- sel.innerHTML=accounts.map(a=>`<option>${esc(a)}</option>`).join('');
- if(accounts.includes(currentValue)) sel.value=currentValue;
-}
+function refreshAccountSelect(){renderAccountChecks([])}
 function showAccounts(){
  renderAccounts(); show('accounts');
 }
@@ -219,7 +262,7 @@ function createAccount(){
  const name=prompt('Nombre de la nueva cuenta:');
  if(!name || !name.trim()) return;
  if(accounts.some(a=>a.toLowerCase()===name.trim().toLowerCase())){alert('Ya existe una cuenta con ese nombre.');return}
- accounts.push(name.trim());saveAccounts();refreshAccountSelect();renderAccounts();
+ accounts.push(name.trim());saveAccounts();refreshAccountSelect();renderAccountChecks([]);renderAccounts();
 }
 function renameAccount(i){
  const name=prompt('Nuevo nombre:',accounts[i]);
@@ -229,7 +272,7 @@ function renameAccount(i){
  accounts[i]=next;
  listings.forEach(l=>{if(l.account===old)l.account=next});
  saveAccounts();localStorage.setItem('lm_listings',JSON.stringify(listings));
- refreshAccountSelect();renderAccounts();
+ refreshAccountSelect();renderAccountChecks([]);renderAccounts();
 }
 function removeAccount(i){
  if(accounts.length<=1){alert('Debe existir al menos una cuenta.');return}
@@ -239,7 +282,7 @@ function removeAccount(i){
  const fallback=accounts[0];
  listings.forEach(l=>{if(l.account===old)l.account=fallback});
  saveAccounts();localStorage.setItem('lm_listings',JSON.stringify(listings));
- refreshAccountSelect();renderAccounts();
+ refreshAccountSelect();renderAccountChecks([]);renderAccounts();
 }
 refreshAccountSelect();
 

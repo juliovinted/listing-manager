@@ -30,7 +30,14 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 
 <section id="home">
 <div class="hero"><div class="hero-title">Tu armario.<br>Todo en un sitio.</div><p>Organiza listings, cuentas y fotografías desde tu iPhone.</p></div>
+<div class="card" style="padding:13px 14px;margin-bottom:12px">
+  <div class="row"><div><b>Anuncios activos</b><div class="muted">Solo aparecen los artículos que todavía están anunciados.</div></div><span class="tag">📦 Activos</span></div>
+</div>
 <div id="homeList"></div>
+<div class="card" style="margin-top:18px">
+  <div class="row"><div><b>🛍️ Cosas vendidas</b><div class="muted">Guarda aquí el historial de todo lo que ya has vendido.</div></div><button class="secondary" type="button" onclick="toggleSoldGallery()">Ver vendidos</button></div>
+</div>
+<div id="soldGallery" class="hidden"></div>
 </section>
 
 <section id="editor" class="hidden">
@@ -89,7 +96,7 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 <label>Rotación: <span id="rotVal">0°</span></label>
 <input class="range" id="rotation" type="range" min="-5" max="5" step="0.1" value="0" oninput="rotVal.textContent=this.value+'°'">
 <label>Recorte por borde: <span id="cropVal">0 px</span></label>
-<input class="range" id="crop" type="range" min="0" max="50" step="1" value="0" oninput="cropVal.textContent=this.value+' px'">
+<input class="range" id="crop" type="range" min="0" max="200" step="1" value="0" oninput="cropVal.textContent=this.value+' px'">
 <label class="check"><input id="strip" type="checkbox" checked> Eliminar metadatos EXIF al exportar</label>
 <div class="actions">
 <button onclick="processPhotos()">Procesar todas las fotos</button>
@@ -219,17 +226,39 @@ function clearForm(){
 }
 function renderHome(){
  const el=document.getElementById('homeList');
- if(!listings.length){el.innerHTML='<div class="card empty">Todavía no tienes anuncios.<br><br>Pulsa <b>+ Nuevo</b> para crear el primero.</div>';return}
- el.innerHTML=listings.map((l,i)=>{
-   const photos=Array.isArray(l.photos)?l.photos:[];
-   const main=photos[0]||'';
+ const soldEl=document.getElementById('soldGallery');
+ const active=listings.filter(l=>!l.sold);
+ if(!active.length){el.innerHTML='<div class="card empty">No tienes anuncios activos.<br><br>Pulsa <b>+ Nuevo</b> para crear uno.</div>'}
+ else el.innerHTML=active.map(l=>{
+   const i=listings.indexOf(l), photos=Array.isArray(l.photos)?l.photos:[], main=photos[0]||'';
    return `<div class="card">
-    <div class="row"><div><b>${esc(l.name||'Sin título')}</b><div class="muted">${esc(l.brand||'')} · ${esc(l.size||'')}</div></div><b class="price">${l.sold?Number(l.salePrice||0).toFixed(2)+' € vendido':Number(l.price||0).toFixed(2)+' €'}</b></div>
-    <span class="tag">👤 ${esc(accountSummary(l))}</span> <span class="tag">${esc(l.condition||'')}</span> ${l.sold?'<span class="tag" style="border-color:#b8ff3d;color:#b8ff3d">✓ VENDIDO · '+esc(l.saleAccount||'')+'</span>':''}
+    <div class="row"><div><b>${esc(l.name||'Sin título')}</b><div class="muted">${esc(l.brand||'')} · ${esc(l.size||'')}</div></div><b class="price">${Number(l.price||0).toFixed(2)} €</b></div>
+    <span class="tag">👤 ${esc(accountSummary(l))}</span> <span class="tag">${esc(l.condition||'')}</span>
     ${main?`<div class="listing-gallery"><img class="listing-main-photo" src="${main}" alt="Foto principal">${photos.length>1?`<div class="listing-thumbs">${photos.slice(1).map((p,j)=>`<img src="${p}" alt="Foto ${j+2}">`).join('')}</div>`:''}<div class="small" style="margin-top:7px">${photos.length} foto${photos.length===1?'':'s'} en este anuncio</div></div>`:''}
     <div class="actions"><button onclick="editListing(${i})">Editar</button><button class="secondary" onclick="openPrivacy(${i})">🔒 Privacidad / fotos</button><button class="danger" onclick="deleteListing(${i})">Borrar</button></div>
    </div>`;
  }).join('');
+ renderSoldGallery(false);
+}
+
+function renderSoldGallery(showIt=true){
+ const soldEl=document.getElementById('soldGallery');
+ const sold=listings.filter(l=>l.sold);
+ if(!sold.length){soldEl.innerHTML='<div class="card empty">Todavía no hay artículos vendidos.</div>'}
+ else soldEl.innerHTML=`<div class="card"><h3>🛍️ Historial de ventas</h3><p class="muted">Aquí se guardan los anuncios que ya has marcado como vendidos.</p></div>`+sold.map(l=>{
+   const i=listings.indexOf(l), photos=Array.isArray(l.photos)?l.photos:[], main=photos[0]||'';
+   return `<div class="card">
+    <div class="row"><div><b>${esc(l.name||'Sin título')}</b><div class="muted">${esc(l.brand||'')} · ${esc(l.size||'')}</div></div><b class="price">${Number(l.salePrice||0).toFixed(2)} €</b></div>
+    <span class="tag" style="border-color:#b8ff3d;color:#b8ff3d">✓ VENDIDO</span> <span class="tag">👤 ${esc(l.saleAccount||'Sin cuenta')}</span>
+    ${main?`<div class="listing-gallery"><img class="listing-main-photo" src="${main}" alt="Foto principal">${photos.length>1?`<div class="listing-thumbs">${photos.slice(1).map((p,j)=>`<img src="${p}" alt="Foto ${j+2}">`).join('')}</div>`:''}</div>`:''}
+    <div class="actions"><button onclick="editListing(${i})">Ver / editar</button></div>
+   </div>`;
+ }).join('');
+ if(showIt) soldEl.classList.remove('hidden');
+}
+function toggleSoldGallery(){
+ const soldEl=document.getElementById('soldGallery');
+ if(soldEl.classList.contains('hidden')) renderSoldGallery(true); else soldEl.classList.add('hidden');
 }
 
 function editListing(i){

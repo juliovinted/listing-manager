@@ -26,6 +26,7 @@ label{font-size:13px;font-weight:600}.actions{display:flex;gap:8px;flex-wrap:wra
 <div class="nav">
 <button onclick="show('home')">Anuncios</button>
 <button onclick="newListing()">+ Nuevo</button>
+<button onclick="showAccounts()">👤 Cuentas</button>
 </div>
 
 <section id="home"></section>
@@ -43,11 +44,28 @@ label{font-size:13px;font-weight:600}.actions{display:flex;gap:8px;flex-wrap:wra
 <select id="condition"><option>Nuevo</option><option>Muy bueno</option><option>Bueno</option></select>
 <label>Descripción</label><input id="description" placeholder="Descripción del artículo">
 <label>Fotos</label>
-<input id="photos" type="file" accept="image/*" multiple capture="environment">
+<div class="actions">
+<button type="button" onclick="galleryInput.click()">🖼️ Galería</button>
+<button type="button" class="secondary" onclick="cameraInput.click()">📷 Cámara</button>
+</div>
+<input id="galleryInput" type="file" accept="image/*" multiple class="hidden">
+<input id="cameraInput" type="file" accept="image/*" capture="environment" class="hidden">
 <div id="photoGrid" class="grid"></div>
 <div class="actions">
 <button onclick="saveListing()">Guardar anuncio</button>
 <button class="secondary" onclick="show('home')">Cancelar</button>
+</div>
+</div>
+</section>
+
+<section id="accounts" class="hidden">
+<div class="card">
+<h2>Gestionar cuentas</h2>
+<p class="muted">Crea, renombra o elimina las cuentas que utilizas para organizar tus anuncios.</p>
+<div id="accountsList"></div>
+<div class="actions">
+<button onclick="createAccount()">+ Crear cuenta</button>
+<button class="secondary" onclick="show('home')">Volver</button>
 </div>
 </div>
 </section>
@@ -77,7 +95,7 @@ let listings=JSON.parse(localStorage.getItem('lm_listings')||'[]');
 let current=null, files=[];
 
 function show(id){
-  ['home','editor','privacy'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id));
+  ['home','editor','privacy','accounts'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id));
   if(id==='home') renderHome();
 }
 function newListing(){
@@ -85,7 +103,7 @@ function newListing(){
 }
 function clearForm(){
  ['name','brand','size','price','description'].forEach(id=>document.getElementById(id).value='');
- document.getElementById('account').value='Mi cuenta';document.getElementById('condition').value='Nuevo';
+ refreshAccountSelect(); document.getElementById('account').value=accounts[0]||'';document.getElementById('condition').value='Nuevo';
  document.getElementById('photoGrid').innerHTML='';
 }
 function renderHome(){
@@ -106,20 +124,39 @@ function saveListing(){
  const idx=listings.findIndex(x=>x.id===current.id); if(idx>=0) listings[idx]=current; else listings.push(current);
  localStorage.setItem('lm_listings',JSON.stringify(listings));show('home');
 }
-photos.addEventListener('change', async e=>{
- for(const f of e.target.files){current.photos.push(await fileToDataURL(f))}
+async function addSelectedPhotos(fileList){
+ for(const f of fileList){current.photos.push(await fileToDataURL(f))}
  renderPhotoGrid(current.photos);
-});
+}
+galleryInput.addEventListener('change', e=>{ addSelectedPhotos(e.target.files); e.target.value=''; });
+cameraInput.addEventListener('change', e=>{ addSelectedPhotos(e.target.files); e.target.value=''; });
 function renderPhotoGrid(arr){photoGrid.innerHTML=arr.map(p=>`<img src="${p}">`).join('')}
 function openPrivacy(i){current=listings[i];document.getElementById('privacyGrid').innerHTML=current.photos.map(p=>`<img src="${p}">`).join('');show('privacy')}
-function processPhotos(){
+async function processPhotos(){
  if(!current.photos.length){alert('Este anuncio no tiene fotos.');return}
  const rot=+rotation.value,crop=+crop.value;
- Promise.all(current.photos.map(src=>processImage(src,rot,crop))).then(out=>{
-   const a=document.createElement('a'); // fallback: download individually through generated links
-   out.forEach((blob,i)=>{const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=`listing_${current.id}_${i+1}.jpg`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),2000)});
-   alert('Fotos procesadas. En Safari, confirma las descargas y guárdalas en Fotos/Archivos según la opción que aparezca.');
- });
+ try{
+   const out=await Promise.all(current.photos.map(src=>processImage(src,rot,crop)));
+   // iOS Safari: try the native share sheet first. If multiple files are supported,
+   // this lets the user save/share them directly; otherwise fall back to downloads.
+   const files=out.map((blob,i)=>new File([blob],`listing_${current.id}_${i+1}.jpg`,{type:'image/jpeg'}));
+   if(navigator.share && (!navigator.canShare || navigator.canShare({files}))){
+      await navigator.share({files,title:'Fotos procesadas'});
+      alert('Listo. Usa "Guardar imágenes" o "Guardar en Fotos" en el menú de compartir.');
+   }else{
+      for(const file of files){
+        const url=URL.createObjectURL(file);
+        const link=document.createElement('a');
+        link.href=url;link.download=file.name;link.target='_blank';
+        document.body.appendChild(link);link.click();link.remove();
+        setTimeout(()=>URL.revokeObjectURL(url),5000);
+      }
+      alert('Se han generado las fotos. En iPhone, abre cada archivo desde Descargas y pulsa Compartir → Guardar imagen.');
+   }
+ }catch(err){
+   if(err && err.name==='AbortError') return;
+   alert('No se pudo exportar. Prueba de nuevo desde Safari.');
+ }
 }
 function processImage(src,deg,crop){
  return new Promise(resolve=>{
@@ -135,6 +172,57 @@ function processImage(src,deg,crop){
 }
 function deleteListing(i){if(confirm('¿Borrar este anuncio?')){listings.splice(i,1);localStorage.setItem('lm_listings',JSON.stringify(listings));renderHome()}}
 function fileToDataURL(f){return new Promise((r,j)=>{const x=new FileReader();x.onload=()=>r(x.result);x.onerror=j;x.readAsDataURL(f)})}
+let accounts=JSON.parse(localStorage.getItem('lm_accounts')||'["Mi cuenta","Cuenta hermana","Cuenta primo"]');
+
+function saveAccounts(){localStorage.setItem('lm_accounts',JSON.stringify(accounts));}
+function refreshAccountSelect(){
+ const sel=document.getElementById('account');
+ const currentValue=sel.value;
+ sel.innerHTML=accounts.map(a=>`<option>${esc(a)}</option>`).join('');
+ if(accounts.includes(currentValue)) sel.value=currentValue;
+}
+function showAccounts(){
+ renderAccounts(); show('accounts');
+}
+function renderAccounts(){
+ const el=document.getElementById('accountsList');
+ if(!accounts.length){el.innerHTML='<p class="empty">No hay cuentas creadas.</p>';return}
+ el.innerHTML=accounts.map((a,i)=>`<div class="card" style="margin:10px 0">
+   <div class="row"><b>${esc(a)}</b><span class="muted">Cuenta ${i+1}</span></div>
+   <div class="actions">
+    <button onclick="renameAccount(${i})">Renombrar</button>
+    <button class="danger" onclick="removeAccount(${i})">Eliminar</button>
+   </div>
+ </div>`).join('');
+}
+function createAccount(){
+ const name=prompt('Nombre de la nueva cuenta:');
+ if(!name || !name.trim()) return;
+ if(accounts.some(a=>a.toLowerCase()===name.trim().toLowerCase())){alert('Ya existe una cuenta con ese nombre.');return}
+ accounts.push(name.trim());saveAccounts();refreshAccountSelect();renderAccounts();
+}
+function renameAccount(i){
+ const name=prompt('Nuevo nombre:',accounts[i]);
+ if(!name || !name.trim()) return;
+ const old=accounts[i], next=name.trim();
+ if(accounts.some((a,j)=>j!==i && a.toLowerCase()===next.toLowerCase())){alert('Ya existe una cuenta con ese nombre.');return}
+ accounts[i]=next;
+ listings.forEach(l=>{if(l.account===old)l.account=next});
+ saveAccounts();localStorage.setItem('lm_listings',JSON.stringify(listings));
+ refreshAccountSelect();renderAccounts();
+}
+function removeAccount(i){
+ if(accounts.length<=1){alert('Debe existir al menos una cuenta.');return}
+ const old=accounts[i];
+ if(!confirm(`¿Eliminar "${old}"? Los anuncios asociados pasarán a la primera cuenta disponible.`))return;
+ accounts.splice(i,1);
+ const fallback=accounts[0];
+ listings.forEach(l=>{if(l.account===old)l.account=fallback});
+ saveAccounts();localStorage.setItem('lm_listings',JSON.stringify(listings));
+ refreshAccountSelect();renderAccounts();
+}
+refreshAccountSelect();
+
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 show('home');
 </script>

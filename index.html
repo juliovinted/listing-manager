@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111111">
+<title>Listing Manager</title>
+<style>
+:root{--bg:#070709;--panel:#111116;--panel2:#17171d;--line:#292932;--text:#f5f5f7;--muted:#8d8d98;--accent:#b8ff3d;--accent2:#7c5cff;--danger:#ff5364}
+*{box-sizing:border-box}html{background:var(--bg)}body{margin:0;background:radial-gradient(circle at 85% 0%,#20184a 0,transparent 30%),radial-gradient(circle at 10% 15%,#132414 0,transparent 25%),var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Inter",Arial,sans-serif;min-height:100vh}
+header{padding:28px 18px 16px;position:sticky;top:0;z-index:10;background:rgba(7,7,9,.78);backdrop-filter:blur(22px);border-bottom:1px solid rgba(255,255,255,.07)}
+.brand{display:flex;align-items:center;gap:12px}.logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#70d7ff);display:grid;place-items:center;color:#09090b;font-weight:900;font-size:17px;box-shadow:0 0 30px #b8ff3d25}h1{font-size:22px;letter-spacing:-.5px;margin:0}.sub{color:var(--muted);font-size:12px;margin-top:2px}
+.wrap{padding:18px 16px 100px;max-width:760px;margin:auto}.nav{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:18px}.nav button{padding:11px 8px}
+button{font:inherit;border:0;border-radius:12px;padding:12px 14px;background:var(--accent);color:#0a0a0b;font-weight:800;box-shadow:0 8px 25px #b8ff3d14;transition:.18s transform,.18s opacity}button:active{transform:scale(.97);opacity:.8}.secondary{background:var(--panel2);border:1px solid var(--line);color:var(--text);box-shadow:none}.danger{background:#271116;border:1px solid #5a2029;color:#ff8c98;box-shadow:none}
+.card{background:linear-gradient(180deg,rgba(24,24,30,.94),rgba(14,14,18,.94));border:1px solid var(--line);border-radius:20px;padding:16px;margin:12px 0;box-shadow:0 18px 55px #00000030}.card h2{margin:2px 0 6px;font-size:21px;letter-spacing:-.4px}.card h3{margin:0 0 5px}
+.row{display:flex;gap:12px;align-items:center;justify-content:space-between}.muted{color:var(--muted);font-size:13px}.tag{display:inline-block;background:#1c1c23;border:1px solid #30303a;color:#cfcfd7;border-radius:9px;padding:5px 8px;font-size:11px;margin:10px 4px 0 0}.price{font-size:18px;font-weight:800}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px}.grid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;border:1px solid #30303a}.listing-gallery{margin-top:14px}.listing-main-photo{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:16px;border:1px solid #30303a;display:block}.listing-thumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:8px}.listing-thumbs img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;border:1px solid #30303a}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}.actions button{flex:0 0 auto}
+input,select{font:inherit;width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:#0c0c10;color:var(--text);margin:7px 0 14px;outline:none}input:focus,select:focus{border-color:#6666ff;box-shadow:0 0 0 3px #7c5cff18}label{font-size:12px;color:#bdbdc6;font-weight:700;letter-spacing:.2px}.range{accent-color:var(--accent);padding:0!important;border:0!important;box-shadow:none!important}.hidden{display:none}.preview{width:100%;max-height:55vh;object-fit:contain;background:#09090b;border-radius:16px;border:1px solid var(--line)}.empty{text-align:center;padding:48px 12px;color:var(--muted)}.small{font-size:11px;color:var(--muted)}.check{display:flex;gap:9px;align-items:center;margin:8px 0 14px}.check input{width:auto;margin:0;accent-color:var(--accent)}
+.hero{padding:20px;border-radius:22px;background:linear-gradient(135deg,#14191a,#171326);border:1px solid #2d2d37;margin-bottom:16px}.hero-title{font-size:30px;font-weight:850;letter-spacing:-1.4px;line-height:1.05}.hero p{margin:8px 0 0;color:#9999a4;font-size:13px}
+hr{border:0;border-top:1px solid var(--line);margin:18px 0}
+</style>
+</head>
+<body>
+<header><div class="brand"><div class="logo">LM</div><div><h1>Listing Manager</h1><div class="sub">Private workspace · iPhone</div></div></div></header>
+<div class="wrap">
+<div class="nav" style="grid-template-columns:1fr 1fr 1fr 1fr">
+<button onclick="show('home')">Anuncios</button>
+<button onclick="newListing()">+ Nuevo</button>
+<button onclick="showAI()">✨ IA</button>
+<button onclick="showAccounts()">👤 Cuentas</button>
+</div>
+
+<section id="home">
+<div class="hero"><div class="hero-title">Tu armario.<br>Todo en un sitio.</div><p>Organiza listings, cuentas y fotografías desde tu iPhone.</p></div>
+<div class="card" style="padding:13px 14px;margin-bottom:12px">
+  <div class="row"><div><b>Anuncios activos</b><div class="muted">Solo aparecen los artículos que todavía están anunciados.</div></div><span class="tag">📦 Activos</span></div>
+</div>
+<div id="homeList"></div>
+<div class="card" style="margin-top:18px">
+  <div class="row"><div><b>🛍️ Cosas vendidas</b><div class="muted">Guarda aquí el historial de todo lo que ya has vendido.</div></div><button class="secondary" type="button" onclick="toggleSoldGallery()">Ver vendidos</button></div>
+</div>
+<div id="soldGallery" class="hidden"></div>
+</section>
+
+<section id="editor" class="hidden">
+<div class="card">
+<h2 id="editorTitle">Nuevo anuncio</h2>
+<label>Nombre / título</label><input id="name" placeholder="Nike sudadera vintage">
+<label>Marca</label><input id="brand" placeholder="Nike">
+<label>Talla</label><input id="size" placeholder="M">
+<label>Precio (€)</label><input id="price" type="number" step="0.01" placeholder="25">
+<label>CUENTAS DONDE ESTÁ SUBIDO</label>
+<div id="accountChecks" style="display:grid;gap:8px;margin:7px 0 14px"></div>
+<label>Estado</label>
+<select id="condition"><option>Nuevo</option><option>Muy bueno</option><option>Bueno</option></select>
+<label>Descripción</label><input id="description" placeholder="Descripción del artículo">
+<label>Fotos</label>
+<div class="actions">
+<button type="button" onclick="galleryInput.click()">➕ Añadir fotos</button>
+</div>
+<input id="galleryInput" type="file" accept="image/*" multiple class="hidden">
+<div id="photoGrid" class="grid"></div>
+<div id="saleSection" class="card" style="margin:18px 0 0;border-color:#30303a">
+  <h3>💰 Venta</h3>
+  <p class="muted">Solo aparece al abrir un anuncio ya guardado desde «Anuncios».</p>
+  <label class="check"><input id="saleSold" type="checkbox" onchange="toggleSaleFields()"> Marcar este anuncio como vendido</label>
+  <div id="saleFields" class="hidden">
+    <label>Precio real de venta (€)</label><input id="salePriceEditor" type="number" min="0" step="0.01" placeholder="22.50">
+    <label>Cuenta donde se ha vendido</label><select id="saleAccountEditor"></select>
+  </div>
+</div>
+<div class="actions">
+<button onclick="saveListing()">Guardar anuncio</button>
+<button class="secondary" onclick="show('home')">Cancelar</button>
+</div>
+</div>
+</section>
+
+<section id="ai" class="hidden">
+<div class="card">
+<h2>✨ Listing AI</h2>
+<p class="muted">Upload your item photos and let Listing AI create an optimized Vinted title and description in seconds.</p>
+<label>FOTOS DE LA PRENDA</label>
+<div class="actions"><button type="button" onclick="aiPhotoInput.click()">📸 Añadir fotos</button></div>
+<input id="aiPhotoInput" type="file" accept="image/*" multiple class="hidden">
+<div id="aiPhotoGrid" class="grid"></div>
+<label>Marca (opcional)</label><input id="aiBrand" placeholder="Nike">
+<label>Talla</label><input id="aiSize" placeholder="M">
+<label>Color (opcional)</label><input id="aiColor" placeholder="Dark grey">
+<label>Detalles extra (opcional)</label><input id="aiExtra" placeholder="Oversized, measurements in photos...">
+<div class="actions"><button type="button" onclick="generateAIListing()">✨ Generar título + descripción</button><button type="button" class="secondary" onclick="clearAI()">Limpiar</button></div>
+<div id="aiStatus" class="small" style="margin-top:10px"></div>
+</div>
+<div class="card">
+<h3>⚡ Listing AI</h3>
+<p class="muted">Nuestra inteligencia artificial analiza tus fotos y crea títulos y descripciones optimizados para Vinted.</p>
+<div class="row" style="margin-top:12px;padding:12px;background:#0c0c10;border:1px solid #292932;border-radius:12px">
+  <div><b>Listing AI</b><div id="aiConnectionStatus" class="small">Status: not checked</div></div>
+  <span id="aiConnectionDot" style="width:10px;height:10px;border-radius:50%;background:#777;display:block;flex:0 0 auto"></span>
+</div>
+<div class="actions"><button type="button" class="secondary" onclick="testAIConnection()">🔌 Probar conexión</button></div>
+</div>
+<div id="aiResult" class="card hidden">
+<h3>Resultado</h3>
+<label>TÍTULO</label>
+<input id="aiTitle">
+<div class="actions"><button type="button" class="secondary" onclick="copyAIField('aiTitle')">📋 Copiar título</button></div>
+<label>DESCRIPCIÓN</label>
+<textarea id="aiDescription" style="width:100%;min-height:260px;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:#0c0c10;color:var(--text);font:inherit;resize:vertical;margin:7px 0 10px"></textarea>
+<div class="actions"><button type="button" class="secondary" onclick="copyAIField('aiDescription')">📋 Copiar descripción</button><button type="button" onclick="useAIInNewListing()">➕ Pasar a nuevo anuncio</button></div>
+<p class="small" style="margin-top:10px">Puedes editar el resultado antes de pasarlo al editor. Después podrás elegir las cuentas y pulsar <b>Guardar anuncio</b>.</p>
+</div>
+<div class="card">
+<h3>🤖 ¿Cómo funciona?</h3>
+<p class="muted">Listing AI analyzes your images and returns only the title and description. Your photos stay stored locally in the app and are copied to the new listing when you tap “Pasar a nuevo anuncio”.</p>
+</div>
+<div class="actions"><button type="button" class="secondary" onclick="show('home')">Volver</button></div>
+</section>
+
+<section id="accounts" class="hidden">
+<div class="card">
+<h2>Gestionar cuentas</h2>
+<p class="muted">Crea, renombra o elimina las cuentas que utilizas para organizar tus anuncios.</p>
+<div id="accountsList"></div>
+<div class="actions">
+<button onclick="createAccount()">+ Crear cuenta</button>
+<button class="secondary" onclick="show('home')">Volver</button>
+</div>
+</div>
+</section>
+
+<section id="privacy" class="hidden">
+<div class="card">
+<h2>Privacidad / edición de fotos</h2>
+<p class="muted">Crea copias procesadas de las fotos y guárdalas en el dispositivo.</p>
+<div id="privacyGrid" class="grid"></div>
+<div id="processedArea" class="hidden" style="margin-top:14px"></div>
+<hr style="border:0;border-top:1px solid #eee;margin:18px 0">
+<label>Rotación: <span id="rotVal">0°</span></label>
+<input class="range" id="rotation" type="range" min="-5" max="5" step="0.1" value="0" oninput="rotVal.textContent=this.value+'°'">
+<label>Recorte por borde: <span id="cropVal">0 px</span></label>
+<input class="range" id="crop" type="range" min="0" max="200" step="1" value="0" oninput="cropVal.textContent=this.value+' px'">
+<label class="check"><input id="strip" type="checkbox" checked> Eliminar metadatos EXIF al exportar</label>
+<div class="actions">
+<button onclick="processPhotos()">Procesar todas las fotos</button>
+<button class="secondary" onclick="show('home')">Volver</button>
+</div>
+<p class="small" style="margin-top:12px">La exportación genera nuevas imágenes JPG sin los metadatos EXIF habituales.</p>
+</div>
+</section>
+</div>
+<div id="toast" class="hidden" style="position:fixed;left:16px;right:16px;bottom:22px;z-index:99;background:#f5f5f7;color:#09090b;padding:14px 16px;border-radius:15px;font-weight:800;box-shadow:0 18px 45px #0008;text-align:center"></div>
+
+<script>
+let listings=[];
+let current=null, files=[];
+let dbPromise=null;
+let aiPhotos=[];
+const LISTING_AI_ENDPOINT='https://vinted-gemini.m8c9j7hfvn.workers.dev';
+
+const AI_PROMPT=`You are an expert Vinted listing assistant specialized in creating high-converting titles and descriptions for second-hand and vintage clothing.
+
+The user will provide a photo of a clothing item and/or basic information such as brand, size, color, style or measurements. Analyze the garment visually and create a Vinted listing in ENGLISH.
+
+IMPORTANT RULES:
+1. TITLE: Maximum 100 characters. Always try to use as close to 100 characters as possible without irrelevant words. Prioritize brand, garment type, model/style, color, fit, era/style keywords and relevant popular keywords such as vintage, Y2K, retro, streetwear, oversized, grunge, etc. Do not invent a brand, specific model, collection, material, era or provenance that cannot reasonably be established. If unbranded, do not mention unbranded unless necessary.
+2. DESCRIPTION: Use exactly this structure:
+[ITEM NAME]
+
+🏷️ Brand: [brand]
+📏 Size: [size]
+🎨 Color: [color]
+[OPTIONAL relevant category emoji]: [Style description]
+✅ Condition: Please check the photos for details.
+📸 Please refer to the photos for the item’s exact condition. Any flaws or signs of wear, if present, are shown as clearly as possible.
+📦 Fast & safe shipping ✅
+💬 Feel free to ask any questions! 😊
+
+#keyword #keyword #keyword ...
+3. Style description must be attractive but factual. Mention visible design, aesthetics, fit and outfit uses only when appropriate. Never claim authenticity, rarity, exact age, fabric composition or designer provenance without evidence.
+4. Use exactly the provided size. If approximate, write e.g. L approx. If exact measurements are shown in photos, write: 📏 Size: [size] — Exact measurements are shown in the photos.
+5. Brand: use only if provided or clearly readable. Never guess.
+6. Color: identify main visible colors with natural fashion terminology.
+7. Hashtags: English only, lowercase, relevant and varied across brand, garment type, color, style, aesthetic, fit, category and model keywords.
+8. Ignore jeans or other garments used as background/styling props unless the user says they are included.
+9. User-provided instructions have priority.
+10. Output ONLY valid JSON with exactly two string fields: title and description. No markdown fences.`;
+
+function openDB(){
+ if(!('indexedDB' in window)) return Promise.reject(new Error('IndexedDB no disponible'));
+ if(dbPromise) return dbPromise;
+ dbPromise=new Promise((resolve,reject)=>{
+   const req=indexedDB.open('ListingManagerDB',1);
+   req.onupgradeneeded=()=>{
+     const db=req.result;
+     if(!db.objectStoreNames.contains('photos')) db.createObjectStore('photos',{keyPath:'key'});
+   };
+   req.onsuccess=()=>resolve(req.result);
+   req.onerror=()=>reject(req.error||new Error('No se pudo abrir el almacenamiento'));
+ });
+ return dbPromise;
+}
+function photoKey(listingId,index){return String(listingId)+'_'+String(index)}
+async function idbPutPhotos(listingId,photos){
+ const db=await openDB();
+ return new Promise((resolve,reject)=>{
+   const tx=db.transaction('photos','readwrite'), store=tx.objectStore('photos');
+   photos.forEach((data,i)=>store.put({key:photoKey(listingId,i),listingId,index:i,data}));
+   tx.oncomplete=resolve; tx.onerror=()=>reject(tx.error||new Error('No se pudieron guardar las fotos'));
+ });
+}
+async function idbGetPhotos(listingId,count){
+ const db=await openDB();
+ return new Promise((resolve,reject)=>{
+   const tx=db.transaction('photos','readonly'), store=tx.objectStore('photos'), out=new Array(count);
+   let pending=count;
+   if(!count){resolve([]);return}
+   for(let i=0;i<count;i++){
+     const r=store.get(photoKey(listingId,i));
+     r.onsuccess=()=>{out[i]=r.result?.data||null;if(--pending===0)resolve(out.filter(Boolean))};
+     r.onerror=()=>reject(r.error);
+   }
+ });
+}
+async function idbDeletePhotos(listingId){
+ try{
+  const db=await openDB();
+  return new Promise((resolve,reject)=>{
+   const tx=db.transaction('photos','readwrite'),store=tx.objectStore('photos');
+   const req=store.openCursor();
+   req.onsuccess=()=>{const c=req.result;if(!c){return} if(c.value.listingId===listingId)store.delete(c.key);c.continue()};
+   tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);
+  });
+ }catch(e){}
+}
+async function persistListings(){
+ // Metadata stays in localStorage; image data lives in IndexedDB so large photo sets no longer hit the quota.
+ const metadata=listings.map(l=>{const x={...l};delete x.photos; x.photoCount=Array.isArray(l.photos)?l.photos.length:(l.photoCount||0);return x});
+ localStorage.setItem('lm_listings',JSON.stringify(metadata));
+ for(const l of listings) if(Array.isArray(l.photos)) await idbPutPhotos(l.id,l.photos);
+}
+async function loadListings(){
+ let raw=[];
+ try{raw=JSON.parse(localStorage.getItem('lm_listings')||'[]')}catch(e){raw=[]}
+ try{
+   const migrated=[];
+   for(const l of raw){
+     let photos=Array.isArray(l.photos)?l.photos:[];
+     if(!photos.length && l.photoCount){photos=await idbGetPhotos(l.id,l.photoCount)}
+     migrated.push({...l,photos});
+   }
+   listings=migrated;
+   // Migrate old localStorage records containing base64 photos to IndexedDB immediately.
+   if(raw.some(l=>Array.isArray(l.photos)&&l.photos.length)){
+     await persistListings();
+   }
+ }catch(e){
+   listings=raw.map(l=>({...l,photos:Array.isArray(l.photos)?l.photos:[]}));
+ }
+ renderHome();
+}
+
+function toast(message){
+ const t=document.getElementById('toast');t.textContent=message;t.classList.remove('hidden');
+ clearTimeout(window.__toast);window.__toast=setTimeout(()=>t.classList.add('hidden'),2200);
+}
+function getSelectedAccounts(){
+ return [...document.querySelectorAll('#accountChecks input[type=checkbox]:checked')].map(x=>x.value);
+}
+function renderAccountChecks(selected=[]){
+ const box=document.getElementById('accountChecks');
+ if(!accounts.length){box.innerHTML='<div class="muted">Crea una cuenta primero.</div>';return}
+ box.innerHTML=accounts.map(a=>`<label style="display:flex;align-items:center;gap:9px;padding:11px 12px;background:#0c0c10;border:1px solid #292932;border-radius:12px;color:#eee">
+ <input type="checkbox" value="${esc(a)}" ${selected.includes(a)?'checked':''} style="width:auto;margin:0;accent-color:#b8ff3d">
+ <span>${esc(a)}</span></label>`).join('');
+}
+function setSelectedAccounts(selected){renderAccountChecks(selected||[])}
+function accountSummary(l){
+ const arr=Array.isArray(l.accounts)?l.accounts:(l.account?[l.account]:[]);
+ return arr.length?arr.join(' · '):'Sin cuenta asignada';
+}
+
+function show(id){
+  ['home','editor','privacy','accounts','ai'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id));
+  if(id==='home') renderHome();
+}
+function newListing(){
+ current={id:Date.now(),photos:[]}; files=[]; clearForm(); show('editor');
+}
+function clearForm(){
+ ['name','brand','size','price','description'].forEach(id=>document.getElementById(id).value='');
+ renderAccountChecks([]);document.getElementById('condition').value='Nuevo';
+ document.getElementById('photoGrid').innerHTML='';
+ document.getElementById('saleSection').classList.add('hidden');
+ document.getElementById('saleSold').checked=false;
+ document.getElementById('saleFields').classList.add('hidden');
+ document.getElementById('salePriceEditor').value='';
+ document.getElementById('saleAccountEditor').innerHTML='';
+}
+function renderHome(){
+ const el=document.getElementById('homeList');
+ const soldEl=document.getElementById('soldGallery');
+ const active=listings.filter(l=>!l.sold);
+ if(!active.length){el.innerHTML='<div class="card empty">No tienes anuncios activos.<br><br>Pulsa <b>+ Nuevo</b> para crear uno.</div>'}
+ else el.innerHTML=active.map(l=>{
+   const i=listings.indexOf(l), photos=Array.isArray(l.photos)?l.photos:[], main=photos[0]||'';
+   return `<div class="card">
+    <div class="row"><div><b>${esc(l.name||'Sin título')}</b><div class="muted">${esc(l.brand||'')} · ${esc(l.size||'')}</div></div><b class="price">${Number(l.price||0).toFixed(2)} €</b></div>
+    <span class="tag">👤 ${esc(accountSummary(l))}</span> <span class="tag">${esc(l.condition||'')}</span>
+    ${main?`<div class="listing-gallery"><img class="listing-main-photo" src="${main}" alt="Foto principal">${photos.length>1?`<div class="listing-thumbs">${photos.slice(1).map((p,j)=>`<img src="${p}" alt="Foto ${j+2}">`).join('')}</div>`:''}<div class="small" style="margin-top:7px">${photos.length} foto${photos.length===1?'':'s'} en este anuncio</div></div>`:''}
+    <div class="actions"><button onclick="editListing(${i})">Editar</button><button class="secondary" onclick="openPrivacy(${i})">🔒 Privacidad / fotos</button><button class="danger" onclick="deleteListing(${i})">Borrar</button></div>
+   </div>`;
+ }).join('');
+ renderSoldGallery(false);
+}
+
+function renderSoldGallery(showIt=true){
+ const soldEl=document.getElementById('soldGallery');
+ const sold=listings.filter(l=>l.sold);
+ if(!sold.length){soldEl.innerHTML='<div class="card empty">Todavía no hay artículos vendidos.</div>'}
+ else soldEl.innerHTML=`<div class="card"><h3>🛍️ Historial de ventas</h3><p class="muted">Aquí se guardan los anuncios que ya has marcado como vendidos.</p></div>`+sold.map(l=>{
+   const i=listings.indexOf(l), photos=Array.isArray(l.photos)?l.photos:[], main=photos[0]||'';
+   return `<div class="card">
+    <div class="row"><div><b>${esc(l.name||'Sin título')}</b><div class="muted">${esc(l.brand||'')} · ${esc(l.size||'')}</div></div><b class="price">${Number(l.salePrice||0).toFixed(2)} €</b></div>
+    <span class="tag" style="border-color:#b8ff3d;color:#b8ff3d">✓ VENDIDO</span> <span class="tag">👤 ${esc(l.saleAccount||'Sin cuenta')}</span>
+    ${main?`<div class="listing-gallery"><img class="listing-main-photo" src="${main}" alt="Foto principal">${photos.length>1?`<div class="listing-thumbs">${photos.slice(1).map((p,j)=>`<img src="${p}" alt="Foto ${j+2}">`).join('')}</div>`:''}</div>`:''}
+    <div class="actions"><button onclick="editListing(${i})">Ver / editar</button></div>
+   </div>`;
+ }).join('');
+ if(showIt) soldEl.classList.remove('hidden');
+}
+function toggleSoldGallery(){
+ const soldEl=document.getElementById('soldGallery');
+ if(soldEl.classList.contains('hidden')) renderSoldGallery(true); else soldEl.classList.add('hidden');
+}
+
+function editListing(i){
+ current=listings[i]; files=[];
+ document.getElementById('editorTitle').textContent='Editar anuncio';
+ document.getElementById('name').value=current.name||'';
+ document.getElementById('brand').value=current.brand||'';
+ document.getElementById('size').value=current.size||'';
+ document.getElementById('price').value=current.price||'';
+ document.getElementById('description').value=current.description||'';
+ renderAccountChecks(current.accounts || (current.account?[current.account]:[]));
+ document.getElementById('condition').value=current.condition||'Nuevo';
+ renderPhotoGrid(current.photos);
+ const saleAccounts=(Array.isArray(current.accounts)&&current.accounts.length)?current.accounts:(current.account?[current.account]:accounts);
+ const saleSel=document.getElementById('saleAccountEditor');
+ saleSel.innerHTML=saleAccounts.map(a=>`<option value="${esc(a)}">${esc(a)}</option>`).join('');
+ document.getElementById('saleSold').checked=!!current.sold;
+ document.getElementById('salePriceEditor').value=current.sold && current.salePrice!=null?current.salePrice:'';
+ if(current.saleAccount && saleAccounts.includes(current.saleAccount)) saleSel.value=current.saleAccount;
+ document.getElementById('saleSection').classList.remove('hidden');
+ toggleSaleFields();
+ show('editor');
+}
+function toggleSaleFields(){
+ const checked=document.getElementById('saleSold').checked;
+ document.getElementById('saleFields').classList.toggle('hidden',!checked);
+}
+async function saveListing(){
+ try{
+  current.name=document.getElementById('name').value.trim();
+  current.brand=document.getElementById('brand').value.trim();
+  current.size=document.getElementById('size').value.trim();
+  current.price=document.getElementById('price').value;
+  current.description=document.getElementById('description').value.trim();
+  current.accounts=getSelectedAccounts();
+  current.account=current.accounts[0]||'';
+  current.condition=document.getElementById('condition').value;
+  if(current.id && listings.some(x=>x.id===current.id)){
+   const sold=document.getElementById('saleSold').checked;
+   if(sold){
+    const salePrice=parseFloat(document.getElementById('salePriceEditor').value);
+    const saleAccount=document.getElementById('saleAccountEditor').value;
+    if(!Number.isFinite(salePrice)||salePrice<0){alert('Introduce un precio de venta válido.');return}
+    if(!saleAccount){alert('Selecciona la cuenta donde se ha vendido.');return}
+    current.sold=true; current.salePrice=salePrice; current.saleAccount=saleAccount;
+    if(!current.soldAt) current.soldAt=new Date().toISOString();
+   }else{
+    delete current.sold; delete current.salePrice; delete current.saleAccount; delete current.soldAt;
+   }
+  }
+  const idx=listings.findIndex(x=>x.id===current.id);
+  if(idx>=0) listings[idx]=current; else listings.push(current);
+  await persistListings();
+  renderHome(); show('home');
+  toast(idx>=0?'✓ Anuncio actualizado correctamente':'✓ ¡Anuncio creado correctamente!');
+ }catch(err){ console.error(err); alert('No se pudo guardar el anuncio. '+(err.message||'')); }
+}
+
+async function addSelectedPhotos(fileList){
+ const selected=Array.from(fileList||[]);
+ if(!selected.length) return;
+ // Procesamos todas las fotos seleccionadas en paralelo para que no se pierda ninguna.
+ const data=await Promise.all(selected.map(fileToDataURL));
+ current.photos.push(...data);
+ renderPhotoGrid(current.photos);
+}
+galleryInput.addEventListener('change', async e=>{
+ try{ await addSelectedPhotos(e.target.files); }
+ catch(err){ console.error(err); alert('No se pudieron añadir las fotos.'); }
+ e.target.value='';
+});
+function renderPhotoGrid(arr){photoGrid.innerHTML=arr.map(p=>`<img src="${p}">`).join('')}
+function getAIEndpoint(){return LISTING_AI_ENDPOINT;}
+function setAIConnectionUI(state){
+ const status=document.getElementById('aiConnectionStatus');
+ const dot=document.getElementById('aiConnectionDot');
+ if(!status||!dot)return;
+ if(state==='ok'){status.textContent='Status: connected and ready';dot.style.background='#b8ff3d';}
+ else if(state==='checking'){status.textContent='Status: checking connection…';dot.style.background='#f5c542';}
+ else if(state==='error'){status.textContent='Status: connection unavailable';dot.style.background='#ff5364';}
+ else {status.textContent='Status: not checked';dot.style.background='#777';}
+}
+function showAI(){show('ai');setAIConnectionUI('idle');}
+async function testAIConnection(){
+ const endpoint=getAIEndpoint();
+ const status=document.getElementById('aiStatus');
+ setAIConnectionUI('checking');
+ status.textContent='⏳ Checking Listing AI connection…';
+ try{
+  const r=await fetch(endpoint,{method:'GET'});
+  const data=await r.json().catch(()=>({}));
+  if(!r.ok||data.ok!==true) throw new Error(data.error||('HTTP '+r.status));
+  setAIConnectionUI('ok');
+  status.textContent='✓ Listing AI is connected and ready.';
+ }catch(err){
+  console.error(err);setAIConnectionUI('error');status.textContent='❌ Listing AI connection failed.';
+  alert('Listing AI could not connect. Please try again.\n\n'+(err.message||'Connection error'));
+ }
+}
+function saveAISettings(){return;}
+function clearAI(){
+ aiPhotos=[];document.getElementById('aiPhotoGrid').innerHTML='';
+ ['aiBrand','aiSize','aiColor','aiExtra','aiTitle','aiDescription'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+ document.getElementById('aiResult').classList.add('hidden');
+ document.getElementById('aiStatus').textContent='';setAIConnectionUI('idle');
+}
+function renderAIPhotos(){
+ document.getElementById('aiPhotoGrid').innerHTML=aiPhotos.map(p=>`<img src="${p}" alt="Foto de la prenda">`).join('');
+}
+async function fileToDataURL(file){
+ return await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file);});
+}
+document.getElementById('aiPhotoInput').addEventListener('change',async e=>{
+ try{ aiPhotos=await Promise.all(Array.from(e.target.files||[]).slice(0,6).map(fileToDataURL)); renderAIPhotos(); document.getElementById('aiStatus').textContent=aiPhotos.length+' foto(s) preparada(s).'; }
+ catch(err){console.error(err);alert('No se pudieron cargar las fotos.');}
+ e.target.value='';
+});
+function dataUrlParts(dataUrl){
+ const m=String(dataUrl).match(/^data:([^;]+);base64,(.+)$/);
+ if(!m) throw new Error('Formato de imagen no válido.');
+ return {mimeType:m[1],data:m[2]};
+}
+async function generateAIListing(){
+ const status=document.getElementById('aiStatus');
+ const endpoint=getAIEndpoint();
+ if(!aiPhotos.length){status.textContent='';alert('Sube al menos una foto de la prenda.');return}
+ const size=document.getElementById('aiSize').value.trim();
+ if(!size){status.textContent='';alert('Indica la talla.');return}
+ const brand=document.getElementById('aiBrand').value.trim();
+ const color=document.getElementById('aiColor').value.trim();
+ const extra=document.getElementById('aiExtra').value.trim();
+ status.textContent='⏳ Listing AI is creating your listing…';
+ try{
+   const photos=aiPhotos.map(dataUrlParts);
+   const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({photos,brand,size,color,extra})});
+   const data=await r.json().catch(()=>({}));
+   if(!r.ok) throw new Error(data.error||('HTTP '+r.status));
+   if(!data.title||!data.description) throw new Error('Listing AI did not return a valid title and description.');
+   document.getElementById('aiTitle').value=String(data.title).slice(0,100);
+   document.getElementById('aiDescription').value=String(data.description);
+   document.getElementById('aiResult').classList.remove('hidden');
+   status.textContent='✓ Listing AI created your listing.';
+ }catch(err){
+   console.error(err);
+   status.textContent='❌ Error al generar el anuncio.';
+   alert('Listing AI could not create the listing.\n\n'+(err.message||'Unknown error'));
+ }
+}
+async function copyAIField(id){
+ const el=document.getElementById(id), value=el.value||'';
+ if(!value)return;
+ try{await navigator.clipboard.writeText(value);toast('✓ Copiado al portapapeles');}
+ catch(e){el.focus();el.select();document.execCommand('copy');toast('✓ Copiado al portapapeles');}
+}
+function useAIInNewListing(){
+ const title=document.getElementById('aiTitle').value.trim();
+ const description=document.getElementById('aiDescription').value.trim();
+ if(!title||!description){alert('Primero genera el anuncio con la IA.');return}
+ const photos=aiPhotos.slice();
+ const brand=document.getElementById('aiBrand').value.trim();
+ const size=document.getElementById('aiSize').value.trim();
+ newListing();
+ document.getElementById('name').value=title;
+ document.getElementById('description').value=description;
+ document.getElementById('brand').value=brand;
+ document.getElementById('size').value=size;
+ if(photos.length){current.photos=photos;renderPhotoGrid(current.photos);}
+ show('editor');
+ toast('✓ Anuncio preparado. Revisa las cuentas y pulsa Guardar anuncio.');
+}
+
+function openPrivacy(i){current=listings[i];document.getElementById('privacyGrid').innerHTML=current.photos.map(p=>`<img src="${p}">`).join('');show('privacy')}
+async function processPhotos(){
+ if(!current || !current.photos.length){toast('Este anuncio no tiene fotos');return}
+ const rot=+document.getElementById('rotation').value,crop=+document.getElementById('crop').value;
+ const area=document.getElementById('processedArea');
+ area.classList.remove('hidden');
+ area.innerHTML='<div class="card"><b>Procesando todas las fotos…</b><p class="muted">La edición se hace directamente en tu iPhone mediante Canvas. No se suben a ningún servidor.</p></div>';
+ try{
+   const out=[];
+   for(const src of current.photos) out.push(await processImage(src,rot,crop));
+   window.__processedBlobs=out;
+   area.innerHTML='<div class="card"><h3>✓ '+out.length+' fotos procesadas</h3><p class="muted">Cada foto es un JPG nuevo. El canvas genera una copia y elimina los metadatos EXIF habituales.</p><div class="actions"><button type="button" onclick="shareAllProcessed()">📤 Compartir / Guardar todas</button><button type="button" class="secondary" onclick="downloadZip()">⬇️ Crear ZIP con todas</button></div><div id="processedList" style="display:grid;gap:10px;margin-top:14px"></div></div>';
+   const list=document.getElementById('processedList');
+   out.forEach((blob,i)=>{
+     const url=URL.createObjectURL(blob);
+     const row=document.createElement('div');
+     row.style.cssText='display:flex;gap:10px;align-items:center;background:#0c0c10;border:1px solid #292932;border-radius:12px;padding:8px';
+     row.innerHTML=`<img src="${url}" style="width:76px;height:76px;object-fit:cover;border-radius:9px"><div style="flex:1"><b>Foto ${i+1}</b><div class="small">JPG procesado</div></div><button type="button" class="secondary" onclick="openProcessed('${url}')">Abrir</button>`;
+     list.appendChild(row);
+   });
+ }catch(err){
+   console.error(err);
+   area.innerHTML='<div class="card"><b>Ha ocurrido un error al procesar.</b><p class="muted">Prueba con una sola foto primero. Si sigue fallando, abre la página directamente en .</p></div>';
+ }
+}
+
+async function shareAllProcessed(){
+ const blobs=window.__processedBlobs||[];
+ if(!blobs.length){toast('Primero procesa las fotos');return}
+ try{
+   const shareFiles=blobs.map((b,i)=>new File([b],`listing_${current.id}_foto_${i+1}.jpg`,{type:'image/jpeg'}));
+   if(navigator.share && navigator.canShare && navigator.canShare({files:shareFiles})){
+      await navigator.share({files:shareFiles,title:'Fotos procesadas'});
+      toast('✓ Fotos listas para guardar');
+   }else if(navigator.share){
+      // Some iOS versions support sharing but not multiple files. Share one by one is not reliable, so use ZIP.
+      await downloadZip();
+   }else{
+      await downloadZip();
+   }
+ }catch(e){
+   if(e && e.name==='AbortError') return;
+   toast('No se pudo abrir el menú. Hemos preparado el ZIP.');
+   await downloadZip();
+ }
+}
+
+function openProcessed(url){
+ const w=window.open(url,'_blank');
+ if(!w){ location.href=url; }
+}
+
+function crc32(buf){
+ let table=window.__crcTable;
+ if(!table){table=[];for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=(c&1)?(0xedb88320^(c>>>1)):(c>>>1);table[n]=c>>>0}window.__crcTable=table}
+ let c=0xffffffff;for(let i=0;i<buf.length;i++)c=table[(c^buf[i])&255]^(c>>>8);return (c^0xffffffff)>>>0;
+}
+function u16(n){return new Uint8Array([n&255,(n>>>8)&255])}
+function u32(n){return new Uint8Array([n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255])}
+function concatBytes(parts){let len=parts.reduce((s,x)=>s+x.length,0),out=new Uint8Array(len),o=0;for(const x of parts){out.set(x,o);o+=x.length}return out}
+async function makeZip(blobs){
+ const parts=[],central=[];let offset=0;
+ for(let i=0;i<blobs.length;i++){
+   const data=new Uint8Array(await blobs[i].arrayBuffer()),name=new TextEncoder().encode(`listing_${current.id}_${i+1}.jpg`),crc=crc32(data);
+   const local=concatBytes([new Uint8Array([80,75,3,4]),u16(20),u16(0),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(name.length),u16(0),name,data]);
+   parts.push(local);
+   const cen=concatBytes([new Uint8Array([80,75,1,2]),u16(20),u16(20),u16(0),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(name.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(offset),name]);
+   central.push(cen);offset+=local.length;
+ }
+ const cdata=concatBytes(central),body=concatBytes(parts.concat([cdata,new Uint8Array([80,75,5,6]),u16(0),u16(0),u16(blobs.length),u16(blobs.length),u32(cdata.length),u32(offset),u16(0)]));
+ return new Blob([body],{type:'application/zip'});
+}
+async function downloadZip(){
+ const blobs=window.__processedBlobs||[];
+ if(!blobs.length){toast('Primero procesa las fotos');return}
+ try{
+   const zip=await makeZip(blobs);
+   const url=URL.createObjectURL(zip);
+   const a=document.createElement('a');
+   a.href=url;
+   a.download=`listing_${current.id}_fotos.zip`;
+   a.target='_blank';
+   a.rel='noopener';
+   a.textContent='Abrir ZIP';
+   a.style.display='none';
+   document.body.appendChild(a);
+   a.click();
+   setTimeout(()=>{a.remove();URL.revokeObjectURL(url)},15000);
+   toast('✓ ZIP creado con todas las fotos');
+ }catch(err){
+   console.error(err);
+   toast('No se pudo crear el ZIP');
+ }
+}
+
+function processImage(src,deg,crop){
+ return new Promise((resolve,reject)=>{
+  const img=new Image();
+  img.onload=()=>{
+   try{
+    const rad=deg*Math.PI/180,sin=Math.abs(Math.sin(rad)),cos=Math.abs(Math.cos(rad));
+    const nw=Math.ceil(img.width*cos+img.height*sin),nh=Math.ceil(img.width*sin+img.height*cos);
+    const full=document.createElement('canvas');full.width=nw;full.height=nh;
+    const fctx=full.getContext('2d',{willReadFrequently:true});
+    fctx.clearRect(0,0,nw,nh);fctx.translate(nw/2,nh/2);fctx.rotate(rad);fctx.drawImage(img,-img.width/2,-img.height/2);
+    // Find the exact non-transparent bounds of the rotated image. This guarantees no black/empty corners.
+    const pixels=fctx.getImageData(0,0,nw,nh).data;
+    let minX=nw,minY=nh,maxX=-1,maxY=-1;
+    for(let y=0;y<nh;y++){
+      for(let x=0;x<nw;x++){
+        if(pixels[(y*nw+x)*4+3]>5){if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y}
+      }
+    }
+    if(maxX<0) throw new Error('Imagen vacía');
+    const manual=Math.min(crop,Math.floor(Math.min((maxX-minX+1)/2-1,(maxY-minY+1)/2-1)));
+    const sx=minX+Math.max(0,manual),sy=minY+Math.max(0,manual);
+    const sw=Math.max(1,maxX-minX+1-2*manual),sh=Math.max(1,maxY-minY+1-2*manual);
+    const canvas=document.createElement('canvas');canvas.width=sw;canvas.height=sh;
+    const ctx=canvas.getContext('2d');ctx.drawImage(full,sx,sy,sw,sh,0,0,sw,sh);
+    canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('No se pudo generar la imagen')),'image/jpeg',.95);
+   }catch(err){reject(err)}
+  };
+  img.onerror=()=>reject(new Error('No se pudo cargar una de las fotos'));img.src=src;
+ });
+}
+
+async function deleteListing(i){if(confirm('¿Borrar este anuncio?')){const id=listings[i]?.id;listings.splice(i,1);await persistListings();if(id) await idbDeletePhotos(id);renderHome();toast('✓ Anuncio borrado')}}
+function fileToDataURL(f){return new Promise((r,j)=>{const x=new FileReader();x.onload=()=>r(x.result);x.onerror=j;x.readAsDataURL(f)})}
+let accounts=JSON.parse(localStorage.getItem('lm_accounts')||'["Mi cuenta","Cuenta hermana","Cuenta primo"]');
+
+function saveAccounts(){localStorage.setItem('lm_accounts',JSON.stringify(accounts));}
+function refreshAccountSelect(){renderAccountChecks([])}
+function showAccounts(){
+ renderAccounts(); show('accounts');
+}
+function renderAccounts(){
+ const el=document.getElementById('accountsList');
+ if(!accounts.length){el.innerHTML='<p class="empty">No hay cuentas creadas.</p>';return}
+ el.innerHTML=accounts.map((a,i)=>`<div class="card" style="margin:10px 0">
+   <div class="row"><b>${esc(a)}</b><span class="muted">Cuenta ${i+1}</span></div>
+   <div class="actions">
+    <button onclick="renameAccount(${i})">Renombrar</button>
+    <button class="danger" onclick="removeAccount(${i})">Eliminar</button>
+   </div>
+ </div>`).join('');
+}
+function createAccount(){
+ const name=prompt('Nombre de la nueva cuenta:');
+ if(!name || !name.trim()) return;
+ if(accounts.some(a=>a.toLowerCase()===name.trim().toLowerCase())){alert('Ya existe una cuenta con ese nombre.');return}
+ accounts.push(name.trim());saveAccounts();refreshAccountSelect();renderAccountChecks([]);renderAccounts();
+}
+function renameAccount(i){
+ const name=prompt('Nuevo nombre:',accounts[i]);
+ if(!name || !name.trim()) return;
+ const old=accounts[i], next=name.trim();
+ if(accounts.some((a,j)=>j!==i && a.toLowerCase()===next.toLowerCase())){alert('Ya existe una cuenta con ese nombre.');return}
+ accounts[i]=next;
+ listings.forEach(l=>{if(l.account===old)l.account=next;if(l.saleAccount===old)l.saleAccount=next});
+ saveAccounts();persistListings().catch(console.error);
+ refreshAccountSelect();renderAccountChecks([]);renderAccounts();
+}
+function removeAccount(i){
+ if(accounts.length<=1){alert('Debe existir al menos una cuenta.');return}
+ const old=accounts[i];
+ if(!confirm(`¿Eliminar "${old}"? Los anuncios asociados pasarán a la primera cuenta disponible.`))return;
+ accounts.splice(i,1);
+ const fallback=accounts[0];
+ listings.forEach(l=>{if(l.account===old)l.account=fallback;if(l.saleAccount===old)l.saleAccount=fallback});
+ saveAccounts();persistListings().catch(console.error);
+ refreshAccountSelect();renderAccountChecks([]);renderAccounts();
+}
+refreshAccountSelect();
+loadListings();
+
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+show('home');
+</script>
+</body>
+</html>

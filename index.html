@@ -75,6 +75,7 @@ label{font-size:13px;font-weight:600}.actions{display:flex;gap:8px;flex-wrap:wra
 <h2>Privacidad / edición de fotos</h2>
 <p class="muted">Crea copias procesadas de las fotos y guárdalas en el dispositivo.</p>
 <div id="privacyGrid" class="grid"></div>
+<div id="processedArea" class="hidden" style="margin-top:14px"></div>
 <hr style="border:0;border-top:1px solid #eee;margin:18px 0">
 <label>Rotación: <span id="rotVal">0°</span></label>
 <input class="range" id="rotation" type="range" min="-5" max="5" step="0.1" value="0" oninput="rotVal.textContent=this.value+'°'">
@@ -135,37 +136,59 @@ function openPrivacy(i){current=listings[i];document.getElementById('privacyGrid
 async function processPhotos(){
  if(!current.photos.length){alert('Este anuncio no tiene fotos.');return}
  const rot=+rotation.value,crop=+crop.value;
+ const area=document.getElementById('processedArea');
+ area.classList.remove('hidden');
+ area.innerHTML='<div class="card"><b>Procesando fotos…</b><p class="muted">Espera un momento.</p></div>';
  try{
    const out=await Promise.all(current.photos.map(src=>processImage(src,rot,crop)));
-   // iOS Safari: try the native share sheet first. If multiple files are supported,
-   // this lets the user save/share them directly; otherwise fall back to downloads.
-   const files=out.map((blob,i)=>new File([blob],`listing_${current.id}_${i+1}.jpg`,{type:'image/jpeg'}));
-   if(navigator.share && (!navigator.canShare || navigator.canShare({files}))){
-      await navigator.share({files,title:'Fotos procesadas'});
-      alert('Listo. Usa "Guardar imágenes" o "Guardar en Fotos" en el menú de compartir.');
+   area.innerHTML='<div class="card"><h3>Fotos listas</h3><p class="muted">En iPhone, toca <b>Guardar en Fotos</b> en cada imagen y después selecciona <b>Guardar imagen</b> si aparece esa opción.</p><div id="processedList"></div></div>';
+   const list=document.getElementById('processedList');
+   out.forEach((blob,i)=>{
+     const url=URL.createObjectURL(blob);
+     const item=document.createElement('div');
+     item.className='card';
+     item.innerHTML=`<img class="preview" src="${url}" alt="Foto procesada ${i+1}">
+       <div class="actions">
+         <button type="button" onclick="shareProcessed('${url}','listing_${current.id}_${i+1}.jpg')">📤 Guardar en Fotos</button>
+         <a href="${url}" download="listing_${current.id}_${i+1}.jpg" style="text-decoration:none"><button type="button" class="secondary">⬇️ Descargar</button></a>
+       </div>`;
+     list.appendChild(item);
+   });
+ }catch(err){
+   console.error(err);
+   area.innerHTML='<div class="card"><b>No se pudieron procesar las fotos.</b><p class="muted">Prueba de nuevo desde Safari.</p></div>';
+ }
+}
+
+async function shareProcessed(url,name){
+ try{
+   const response=await fetch(url);
+   const blob=await response.blob();
+   const file=new File([blob],name,{type:'image/jpeg'});
+   if(navigator.share && (!navigator.canShare || navigator.canShare({files:[file]}))){
+      await navigator.share({files:[file],title:'Foto procesada'});
    }else{
-      for(const file of files){
-        const url=URL.createObjectURL(file);
-        const link=document.createElement('a');
-        link.href=url;link.download=file.name;link.target='_blank';
-        document.body.appendChild(link);link.click();link.remove();
-        setTimeout(()=>URL.revokeObjectURL(url),5000);
-      }
-      alert('Se han generado las fotos. En iPhone, abre cada archivo desde Descargas y pulsa Compartir → Guardar imagen.');
+      // Reliable iOS fallback: open the generated image so the user can long-press
+      // and choose "Guardar en Fotos".
+      window.open(url,'_blank');
+      alert('Mantén pulsada la imagen y elige «Guardar en Fotos».');
    }
  }catch(err){
    if(err && err.name==='AbortError') return;
-   alert('No se pudo exportar. Prueba de nuevo desde Safari.');
+   window.open(url,'_blank');
  }
 }
+
 function processImage(src,deg,crop){
  return new Promise(resolve=>{
   const img=new Image();img.onload=()=>{
    const rad=deg*Math.PI/180, s=Math.abs(Math.sin(rad)),c=Math.abs(Math.cos(rad));
    const nw=Math.ceil(img.width*c+img.height*s),nh=Math.ceil(img.width*s+img.height*c);
-   const canvas=document.createElement('canvas');canvas.width=Math.max(1,nw-2*crop);canvas.height=Math.max(1,nh-2*crop);
-   const ctx=canvas.getContext('2d');ctx.translate(nw/2,nh/2);ctx.rotate(rad);ctx.drawImage(img,-img.width/2,-img.height/2);
-   const data=ctx.getImageData(crop,crop,canvas.width,canvas.height);canvas.width=data.width;canvas.height=data.height;ctx.putImageData(data,0,0);
+   const full=document.createElement('canvas');full.width=nw;full.height=nh;
+   const fctx=full.getContext('2d');fctx.translate(nw/2,nh/2);fctx.rotate(rad);fctx.drawImage(img,-img.width/2,-img.height/2);
+   const outW=Math.max(1,nw-2*crop),outH=Math.max(1,nh-2*crop);
+   const canvas=document.createElement('canvas');canvas.width=outW;canvas.height=outH;
+   const ctx=canvas.getContext('2d');ctx.drawImage(full,crop,crop,outW,outH,0,0,outW,outH);
    canvas.toBlob(resolve,'image/jpeg',0.95);
   };img.src=src;
  });

@@ -94,7 +94,7 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 <h3>⚡ Listing AI</h3>
 <p class="muted">Nuestra inteligencia artificial analiza tus fotos y crea títulos y descripciones optimizados para Vinted.</p>
 <div class="row" style="margin-top:12px;padding:12px;background:#0c0c10;border:1px solid #292932;border-radius:12px">
-  <div><b>Listing AI</b><div id="aiConnectionStatus" class="small">Status: not checked</div></div>
+  <div><b>Listing AI</b><div id="aiConnectionStatus" class="small">Estado: sin comprobar</div></div>
   <span id="aiConnectionDot" style="width:10px;height:10px;border-radius:50%;background:#777;display:block;flex:0 0 auto"></span>
 </div>
 <div class="actions"><button type="button" class="secondary" onclick="testAIConnection()">🔌 Probar conexión</button></div>
@@ -106,7 +106,7 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
   <div style="flex:1"><label>Modelo</label><select id="vtonGender"><option value="female">Chica</option><option value="male">Chico</option></select></div>
   <div style="flex:1"><label>Talla aproximada</label><select id="vtonSize"><option>S</option><option selected>M</option><option>L</option><option>XL</option></select></div>
 </div>
-<div class="small" style="margin-top:8px">La talla se usa para elegir una referencia de modelo aproximada; el modelo VTON no garantiza una correspondencia exacta de medidas.</div>
+<div class="small" style="margin-top:8px">La talla se usa como referencia para conseguir un ajuste visual aproximado. No garantiza una correspondencia exacta de medidas.</div>
 <div class="actions" style="margin-top:12px"><button type="button" onclick="generateVTON()">✨ Generar foto en modelo</button></div>
 <div id="vtonStatus" class="small" style="margin-top:10px"></div>
 <div id="vtonResult" class="hidden" style="margin-top:14px">
@@ -423,10 +423,10 @@ function setAIConnectionUI(state){
  const status=document.getElementById('aiConnectionStatus');
  const dot=document.getElementById('aiConnectionDot');
  if(!status||!dot)return;
- if(state==='ok'){status.textContent='Status: connected and ready';dot.style.background='#b8ff3d';}
- else if(state==='checking'){status.textContent='Status: checking connection…';dot.style.background='#f5c542';}
- else if(state==='error'){status.textContent='Status: connection unavailable';dot.style.background='#ff5364';}
- else {status.textContent='Status: not checked';dot.style.background='#777';}
+ if(state==='ok'){status.textContent='Estado: conectado y listo';dot.style.background='#b8ff3d';}
+ else if(state==='checking'){status.textContent='Estado: comprobando conexión…';dot.style.background='#f5c542';}
+ else if(state==='error'){status.textContent='Estado: conexión no disponible';dot.style.background='#ff5364';}
+ else {status.textContent='Estado: sin comprobar';dot.style.background='#777';}
 }
 function showAI(){show('ai');setAIConnectionUI('idle');}
 async function testAIConnection(){
@@ -439,17 +439,19 @@ async function testAIConnection(){
   const data=await r.json().catch(()=>({}));
   if(!r.ok||data.ok!==true) throw new Error(data.error||('HTTP '+r.status));
   setAIConnectionUI('ok');
-  status.textContent='✓ Listing AI is connected and ready.';
+  status.textContent='✓ Listing AI está conectado y listo.';
  }catch(err){
   console.error(err);setAIConnectionUI('error');status.textContent='❌ Listing AI connection failed.';
-  alert('Listing AI could not connect. Please try again.\n\n'+(err.message||'Connection error'));
+  alert('Listing AI no ha podido conectarse. Inténtalo de nuevo.\n\n'+(err.message||'Connection error'));
  }
 }
 function saveAISettings(){return;}
 function clearAI(){
- aiPhotos=[];document.getElementById('aiPhotoGrid').innerHTML='';
+ aiPhotos=[];vtonResultData='';document.getElementById('aiPhotoGrid').innerHTML='';
  ['aiBrand','aiSize','aiColor','aiExtra','aiTitle','aiDescription'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
  document.getElementById('aiResult').classList.add('hidden');
+ document.getElementById('vtonResult').classList.add('hidden');
+ document.getElementById('vtonStatus').textContent='';
  document.getElementById('aiStatus').textContent='';setAIConnectionUI('idle');
 }
 function renderAIPhotos(){
@@ -477,7 +479,7 @@ async function generateAIListing(){
  const brand=document.getElementById('aiBrand').value.trim();
  const color=document.getElementById('aiColor').value.trim();
  const extra=document.getElementById('aiExtra').value.trim();
- status.textContent='⏳ Listing AI is creating your listing…';
+ status.textContent='⏳ Listing AI está creando tu anuncio…';
  try{
    const photos=aiPhotos.map(dataUrlParts);
    const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({photos,brand,size,color,extra})});
@@ -487,11 +489,11 @@ async function generateAIListing(){
    document.getElementById('aiTitle').value=String(data.title).slice(0,100);
    document.getElementById('aiDescription').value=String(data.description);
    document.getElementById('aiResult').classList.remove('hidden');
-   status.textContent='✓ Listing AI created your listing.';
+   status.textContent='✓ Listing AI ha creado tu anuncio.';
  }catch(err){
    console.error(err);
    status.textContent='❌ Error al generar el anuncio.';
-   alert('Listing AI could not create the listing.\n\n'+(err.message||'Unknown error'));
+   alert('Listing AI no ha podido crear el anuncio.\n\n'+(err.message||'Unknown error'));
  }
 }
 async function copyAIField(id){
@@ -506,11 +508,11 @@ async function generateVTON(){
  const gender=document.getElementById('vtonGender').value;
  const size=document.getElementById('vtonSize').value;
  if(!aiPhotos.length){status.textContent='Añade primero al menos una foto de la prenda.';return;}
- status.textContent='Generando foto en modelo… puede tardar unos segundos.';
+ status.textContent='⏳ Generando foto en modelo… puede tardar unos segundos.';
  document.getElementById('vtonResult').classList.add('hidden');
  try{
    const garment=dataUrlParts(aiPhotos[0]);
-   const extra=(document.getElementById('aiExtra').value||'clothing item').trim();
+   const extra=(document.getElementById('aiExtra').value||'').trim();
    const r=await fetch(getAIEndpoint(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'tryon',gender,size,garment,garmentDescription:extra})});
    const data=await r.json().catch(()=>({}));
    if(!r.ok||!data.ok) throw new Error(data.error||`HTTP ${r.status}`);
@@ -520,7 +522,8 @@ async function generateVTON(){
    document.getElementById('vtonResult').classList.remove('hidden');
    status.textContent='✓ Foto generada correctamente.';
  }catch(e){
-   status.textContent='Error: '+(e.message||e);
+   status.textContent='❌ No se pudo generar la foto.';
+   alert('No se pudo generar la foto en modelo.\n\n'+(e.message||e));
  }
 }
 function addVTONToListing(){

@@ -93,8 +93,6 @@ input,select,textarea{font:inherit;width:100%;padding:12px 13px;margin:7px 0 15p
 <label>Color (opcional)</label><input id="aiColor" placeholder="Dark grey">
 <label>Detalles extra (opcional)</label><input id="aiExtra" placeholder="Oversized, measurements in photos...">
 <div class="actions"><button type="button" onclick="generateAIListing()">✨ Generar título + descripción</button><button type="button" class="secondary" onclick="clearAI()">Limpiar</button></div>
-<div class="actions" style="margin-top:10px"><button type="button" class="secondary" onclick="testGeminiConnection()">🔧 Probar conexión con Gemini</button></div>
-<div id="geminiTestResult" class="small" style="margin-top:10px"></div>
 <div id="aiStatus" class="small" style="margin-top:10px"></div>
 </div>
 
@@ -466,75 +464,53 @@ function dataUrlParts(dataUrl){
  if(!m) throw new Error('Formato de imagen no válido.');
  return {mimeType:m[1],data:m[2]};
 }
-
-async function testGeminiConnection(){
- const status=document.getElementById('geminiTestResult');
- status.textContent='⏳ Probando conexión con Gemini…';
- try{
-  const r=await fetch(WORKER_ENDPOINT,{
-   method:'POST',
-   headers:{'Content-Type':'application/json'},
-   body:JSON.stringify({action:'test-gemini'})
-  });
-  const data=await r.json().catch(()=>({}));
-  if(!r.ok){
-   const detail=data.response||data.details||data.error||('HTTP '+r.status);
-   console.error('Gemini diagnostic:',data);
-   status.textContent='❌ Gemini devuelve HTTP '+r.status;
-   alert('Gemini sigue dando error.\n\n'+String(detail));
-   return;
-  }
-  console.log('Gemini diagnostic:',data);
-  status.textContent='✓ Gemini funciona correctamente: '+(data.response||'OK');
-  alert('✅ Gemini funciona correctamente.\n\n'+(data.response||'Respuesta recibida.'));
- }catch(err){
-  console.error(err);
-  status.textContent='❌ No se pudo conectar con el Worker.';
-  alert('No se pudo conectar con el Worker.\n\n'+(err.message||'Error desconocido'));
- }
-}
 async function generateAIListing(){
- const status=document.getElementById('aiStatus');
- const endpoint=WORKER_ENDPOINT;
- if(!aiPhotos.length){status.textContent='';alert('Sube al menos una foto de la prenda.');return}
- const size=document.getElementById('aiSize').value.trim();
- if(!size){status.textContent='';alert('Indica la talla.');return}
- const brand=document.getElementById('aiBrand').value.trim();
- const color=document.getElementById('aiColor').value.trim();
- const extra=document.getElementById('aiExtra').value.trim();
- status.textContent='⏳ Enviando fotos a Gemini…';
- try{
-   const photos=aiPhotos.map(dataUrlParts);
-   const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({photos,brand,size,color,extra})});
-   const data=await r.json().catch(()=>({}));
-   if(!r.ok) throw new Error(data.error||('HTTP '+r.status));
-   if(!data.title||!data.description) throw new Error('Gemini no devolvió un título y una descripción válidos.');
-   document.getElementById('aiTitle').value=String(data.title).slice(0,100);
-   document.getElementById('aiDescription').value=String(data.description);
-   document.getElementById('aiResult').classList.remove('hidden');
-   status.textContent='✓ Anuncio generado con Gemini.';
- }catch(err){
-   console.error(err);
-   status.textContent='❌ Error al generar el anuncio.';
-   alert('No se pudo generar el anuncio con Gemini.\n\n'+(err.message||'Error desconocido'));
- }
+  const status=document.getElementById('aiStatus');
+  const endpoint=WORKER_ENDPOINT;
+  if(!aiPhotos.length){status.textContent='';alert('Sube al menos una foto de la prenda.');return}
+  const size=document.getElementById('aiSize').value.trim();
+  if(!size){status.textContent='';alert('Indica la talla.');return}
+  const brand=document.getElementById('aiBrand').value.trim();
+  const color=document.getElementById('aiColor').value.trim();
+  const extra=document.getElementById('aiExtra').value.trim();
+  status.textContent='⏳ Preparando fotos para Gemini…';
+  try{
+    // Comprimimos las imágenes antes de enviarlas para evitar peticiones gigantes desde iPhone.
+    const compressed=await Promise.all(aiPhotos.slice(0,6).map(p=>resizeImageDataURL(p,768,.78)));
+    const photos=compressed.map(dataUrlParts);
+    status.textContent='⏳ Gemini está analizando la prenda…';
+    const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({photos,brand,size,color,extra})});
+    const data=await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(data.error||('HTTP '+r.status));
+    if(!data.title||!data.description) throw new Error('Gemini no devolvió un título y una descripción válidos.');
+    document.getElementById('aiTitle').value=String(data.title).slice(0,100);
+    document.getElementById('aiDescription').value=String(data.description);
+    document.getElementById('aiResult').classList.remove('hidden');
+    status.textContent='✓ Anuncio generado con Gemini.';
+  }catch(err){
+    console.error(err);
+    status.textContent='❌ Error al generar el anuncio.';
+    alert('No se pudo generar el anuncio con Gemini.\n\n'+(err.message||'Error desconocido'));
+  }
 }
-function resizeImageDataURL(dataUrl, maxSide=512){
- return new Promise((resolve,reject)=>{
-  const img=new Image();
-  img.onload=()=>{
-   try{
-    const scale=Math.min(1,maxSide/Math.max(img.naturalWidth,img.naturalHeight));
-    const w=Math.max(1,Math.round(img.naturalWidth*scale)),h=Math.max(1,Math.round(img.naturalHeight*scale));
-    const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
-    const ctx=canvas.getContext('2d');ctx.drawImage(img,0,0,w,h);
-    resolve(canvas.toDataURL('image/jpeg',.88));
-   }catch(e){reject(e)}
-  };
-  img.onerror=()=>reject(new Error('No se pudo preparar la imagen para FLUX.'));
-  img.src=dataUrl;
- });
+
+function resizeImageDataURL(dataUrl,maxSide=512,quality=.88){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    img.onload=()=>{
+      try{
+        const scale=Math.min(1,maxSide/Math.max(img.naturalWidth,img.naturalHeight));
+        const w=Math.max(1,Math.round(img.naturalWidth*scale)),h=Math.max(1,Math.round(img.naturalHeight*scale));
+        const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+        const ctx=canvas.getContext('2d');ctx.drawImage(img,0,0,w,h);
+        resolve(canvas.toDataURL('image/jpeg',quality));
+      }catch(e){reject(e)}
+    };
+    img.onerror=()=>reject(new Error('No se pudo preparar la imagen.'));
+    img.src=dataUrl;
+  });
 }
+
 function clearFluxResult(){
  document.getElementById('fluxResult').classList.add('hidden');
  document.getElementById('fluxImage').removeAttribute('src');
@@ -550,7 +526,7 @@ async function generateFluxImage(){
 IMPORTANT: preserve the exact garment from the reference image. Do not change its brand, logo, graphic, text, color, pattern, material appearance, shape, proportions, seams or distinctive details. Do not invent or remove garment details. Only improve the photographic context, pose/presentation, lighting and background around the garment. The garment must remain the clear visual subject. Photorealistic, natural proportions, premium commercial fashion photography, no text, no watermark.`;
  status.textContent='⏳ Preparando foto y generando con FLUX…';
  try{
-  const resized=await resizeImageDataURL(aiPhotos[0],512);
+  const resized=await resizeImageDataURL(aiPhotos[0],512,.88);
   const photo=dataUrlParts(resized);
   const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'image',photos:[photo],prompt,width:1024,height:1024})});
   const data=await r.json().catch(()=>({}));

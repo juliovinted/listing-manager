@@ -93,6 +93,8 @@ input,select,textarea{font:inherit;width:100%;padding:12px 13px;margin:7px 0 15p
 <label>Color (opcional)</label><input id="aiColor" placeholder="Dark grey">
 <label>Detalles extra (opcional)</label><input id="aiExtra" placeholder="Oversized, measurements in photos...">
 <div class="actions"><button type="button" onclick="generateAIListing()">✨ Generar título + descripción</button><button type="button" class="secondary" onclick="clearAI()">Limpiar</button></div>
+<div class="actions" style="margin-top:10px"><button type="button" class="secondary" onclick="testGeminiConnection()">🔧 Probar conexión con Gemini</button></div>
+<div id="geminiTestResult" class="small" style="margin-top:10px"></div>
 <div id="aiStatus" class="small" style="margin-top:10px"></div>
 </div>
 
@@ -463,6 +465,33 @@ function dataUrlParts(dataUrl){
  const m=String(dataUrl).match(/^data:([^;]+);base64,(.+)$/);
  if(!m) throw new Error('Formato de imagen no válido.');
  return {mimeType:m[1],data:m[2]};
+}
+
+async function testGeminiConnection(){
+ const status=document.getElementById('geminiTestResult');
+ status.textContent='⏳ Probando conexión con Gemini…';
+ try{
+  const r=await fetch(WORKER_ENDPOINT,{
+   method:'POST',
+   headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({action:'test-gemini'})
+  });
+  const data=await r.json().catch(()=>({}));
+  if(!r.ok){
+   const detail=data.response||data.details||data.error||('HTTP '+r.status);
+   console.error('Gemini diagnostic:',data);
+   status.textContent='❌ Gemini devuelve HTTP '+r.status;
+   alert('Gemini sigue dando error.\n\n'+String(detail));
+   return;
+  }
+  console.log('Gemini diagnostic:',data);
+  status.textContent='✓ Gemini funciona correctamente: '+(data.response||'OK');
+  alert('✅ Gemini funciona correctamente.\n\n'+(data.response||'Respuesta recibida.'));
+ }catch(err){
+  console.error(err);
+  status.textContent='❌ No se pudo conectar con el Worker.';
+  alert('No se pudo conectar con el Worker.\n\n'+(err.message||'Error desconocido'));
+ }
 }
 async function generateAIListing(){
  const status=document.getElementById('aiStatus');

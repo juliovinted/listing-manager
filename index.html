@@ -393,8 +393,7 @@ async function generateAIForSavedListing(i,button){
      listing.aiDescription=listing.aiDescription.replace(/^.*(?:Brand|Marca)\s*:\s*.*(?:\r?\n|$)/gim,'').trim();
    }
    await persistListings();
-   // Refrescamos la ficha abierta para que el contenido SEO aparezca inmediatamente,
-   // sin tener que salir del anuncio y volver a entrar.
+   // Actualiza inmediatamente la ficha abierta para mostrar el SEO recién generado.
    openListing(i);
    toast('✓ Contenido para Vinted generado con Gemini');
  }catch(err){

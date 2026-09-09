@@ -99,6 +99,21 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 </div>
 <div class="actions"><button type="button" class="secondary" onclick="testAIConnection()">🔌 Probar conexión</button></div>
 </div>
+<div class="card">
+<h3>🧍 Foto en modelo</h3>
+<p class="muted">Prueba virtualmente la prenda sobre un modelo. Esta primera versión usa un modelo VTON gratuito para hacer las pruebas.</p>
+<div class="row">
+  <div style="flex:1"><label>Modelo</label><select id="vtonGender"><option value="female">Chica</option><option value="male">Chico</option></select></div>
+  <div style="flex:1"><label>Talla aproximada</label><select id="vtonSize"><option>S</option><option selected>M</option><option>L</option><option>XL</option></select></div>
+</div>
+<div class="small" style="margin-top:8px">La talla se usa para elegir una referencia de modelo aproximada; el modelo VTON no garantiza una correspondencia exacta de medidas.</div>
+<div class="actions" style="margin-top:12px"><button type="button" onclick="generateVTON()">✨ Generar foto en modelo</button></div>
+<div id="vtonStatus" class="small" style="margin-top:10px"></div>
+<div id="vtonResult" class="hidden" style="margin-top:14px">
+  <img id="vtonImage" alt="Foto generada en modelo" style="display:block;width:100%;max-width:520px;margin:0 auto;border-radius:14px;border:1px solid var(--line)">
+  <div class="actions" style="margin-top:12px"><button type="button" onclick="addVTONToListing()">➕ Añadir al anuncio</button><button type="button" class="secondary" onclick="generateVTON()">🔄 Generar otra</button></div>
+</div>
+</div>
 <div id="aiResult" class="card hidden">
 <h3>Resultado</h3>
 <label>TÍTULO</label>
@@ -485,6 +500,41 @@ async function copyAIField(id){
  try{await navigator.clipboard.writeText(value);toast('✓ Copiado al portapapeles');}
  catch(e){el.focus();el.select();document.execCommand('copy');toast('✓ Copiado al portapapeles');}
 }
+const VTON_MODEL_REFS={
+ female:{S:'https://huggingface.co/spaces/yisol/IDM-VTON/resolve/main/example/human/sam1%20(1).jpg',M:'https://huggingface.co/spaces/yisol/IDM-VTON/resolve/main/example/human/taylor-.jpg',L:'https://huggingface.co/spaces/yisol/IDM-VTON/resolve/main/example/human/taylor-.jpg',XL:'https://huggingface.co/spaces/yisol/IDM-VTON/resolve/main/example/human/taylor-.jpg'},
+ male:{S:'https://huggingface.co/spaces/yisol/IDM-VTON/resolve/main/example/human/will1%20(1).jpg',M:'https://huggingface.co/spaces/yisol/IDM-VTON/resolve/main/example/human/Jensen.jpeg',L:'https://huggingface.co/spaces/yisol/IDM-VTON/resolve/main/example/human/Jensen.jpeg',XL:'https://huggingface.co/spaces/yisol/IDM-VTON/resolve/main/example/human/Jensen.jpeg'}
+};
+let vtonResultData='';
+async function generateVTON(){
+ const status=document.getElementById('vtonStatus');
+ const gender=document.getElementById('vtonGender').value;
+ const size=document.getElementById('vtonSize').value;
+ if(!aiPhotos.length){status.textContent='';alert('Sube primero al menos una foto de la prenda.');return}
+ status.textContent='⏳ Preparando la prenda y esperando una GPU gratuita… Esto puede tardar 1–3 minutos.';
+ document.getElementById('vtonResult').classList.add('hidden');
+ try{
+   const garment=dataUrlParts(aiPhotos[0]);
+   const modelUrl=VTON_MODEL_REFS[gender][size]||VTON_MODEL_REFS[gender].M;
+   const r=await fetch(getAIEndpoint()+'/vton',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'vton',garment,modelUrl,garmentDescription:(document.getElementById('aiExtra').value||'clothing item').trim()})});
+   const data=await r.json().catch(()=>({}));
+   if(!r.ok)throw new Error(data.error||('HTTP '+r.status));
+   if(!data.image)throw new Error('No se recibió la imagen generada.');
+   vtonResultData=data.image;
+   document.getElementById('vtonImage').src=vtonResultData;
+   document.getElementById('vtonResult').classList.remove('hidden');
+   status.textContent='✓ Foto generada. Revisa que la prenda conserve sus detalles antes de usarla.';
+ }catch(err){
+   console.error(err);status.textContent='❌ No se pudo generar la foto.';alert('No se pudo generar la foto en modelo.\n\n'+(err.message||'Error desconocido'));
+ }
+}
+function addVTONToListing(){
+ if(!vtonResultData)return;
+ aiPhotos.push(vtonResultData);
+ renderAIPhotos();
+ document.getElementById('vtonStatus').textContent='✓ Foto añadida a las fotos del anuncio.';
+ toast('✓ Foto en modelo añadida al anuncio');
+}
+
 function useAIInNewListing(){
  const title=document.getElementById('aiTitle').value.trim();
  const description=document.getElementById('aiDescription').value.trim();

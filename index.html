@@ -17,10 +17,12 @@ header{padding:18px 18px 15px;position:sticky;top:0;z-index:30;background:rgba(9
 button{font:inherit;min-height:42px;border:1px solid transparent;border-radius:12px;padding:11px 13px;background:linear-gradient(135deg,#6366f1,#4f72e8 50%,#3b82f6);color:#fff;font-weight:700;font-size:12px;letter-spacing:-.01em;cursor:pointer;box-shadow:0 8px 25px -12px rgba(79,70,229,.7);transition:var(--ease)}button:hover{transform:translateY(-1px);box-shadow:0 0 20px rgba(99,102,241,.22),0 10px 28px -14px rgba(0,0,0,.7)}button:active{transform:translateY(0) scale(.98)}.secondary{background:rgba(255,255,255,.035);border-color:var(--line);color:#cbd5e1;box-shadow:none}.secondary:hover{background:rgba(255,255,255,.06);border-color:var(--line2);box-shadow:0 0 20px rgba(99,102,241,.08)}.danger{background:rgba(244,63,94,.08);border-color:rgba(244,63,94,.2);color:#fda4af;box-shadow:none}
 .card{position:relative;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.025));border:1px solid var(--line);border-radius:20px;padding:24px;margin:14px 0;box-shadow:0 18px 55px -30px rgba(0,0,0,.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);transition:var(--ease)}.card:hover{border-color:rgba(255,255,255,.13)}.card h2{margin:2px 0 7px;font-size:21px;line-height:1.2;letter-spacing:-.035em;font-weight:700}.card h3{margin:0 0 6px;font-size:15px;font-weight:700;letter-spacing:-.02em}.row{display:flex;gap:12px;align-items:center;justify-content:space-between}.muted{color:var(--muted);font-size:12px;line-height:1.6}.small{font-size:11px;color:var(--muted2);line-height:1.55}.tag{display:inline-block;background:rgba(99,102,241,.08);border:1px solid rgba(129,140,248,.18);color:#c7d2fe;border-radius:999px;padding:6px 9px;font-size:10px;font-weight:700;margin:10px 4px 0 0}.price{font-size:18px;font-weight:800;letter-spacing:-.03em}
 .hero{position:relative;min-height:225px;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;padding:30px;margin-bottom:16px;border:1px solid rgba(129,140,248,.16);border-radius:26px;background:radial-gradient(420px 220px at 92% 10%,rgba(99,102,241,.2),transparent 70%),radial-gradient(340px 220px at 5% 105%,rgba(59,130,246,.1),transparent 70%),linear-gradient(145deg,rgba(20,27,43,.96),rgba(13,18,30,.94));box-shadow:0 24px 70px -38px rgba(0,0,0,.9)}.hero:after{content:"";position:absolute;right:-55px;top:-75px;width:180px;height:180px;border-radius:50%;background:rgba(129,140,248,.12);filter:blur(30px)}.hero-title{position:relative;z-index:1;font-size:clamp(36px,8vw,54px);font-weight:800;line-height:.98;letter-spacing:-.055em;background:linear-gradient(100deg,#f8fafc 8%,#c7d2fe 48%,#60a5fa);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}.hero p{position:relative;z-index:1;max-width:520px;margin:13px 0 0;color:#94a3b8;font-size:12px;line-height:1.6}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:13px}.grid img{width:100%;aspect-ratio:1;object-fit:cover;display:block;border:1px solid var(--line);border-radius:14px;background:#0b101a}.listing-gallery{margin-top:15px}.listing-main-photo{width:100%;aspect-ratio:1;object-fit:cover;display:block;border:1px solid var(--line);border-radius:17px;background:#0b101a}.listing-thumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}.listing-thumbs img{width:100%;aspect-ratio:1;object-fit:cover;border:1px solid var(--line);border-radius:12px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.actions button{flex:0 0 auto}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:13px}
+.listing-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}.listing-tile{position:relative;overflow:hidden;min-width:0;padding:0!important;margin:0!important;border-radius:18px;cursor:pointer;background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.025));border:1px solid rgba(255,255,255,.1);box-shadow:0 14px 35px -24px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.06);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease}.listing-tile:active{transform:scale(.985)}.listing-tile:hover{border-color:rgba(255,255,255,.18);box-shadow:0 18px 40px -24px rgba(0,0,0,.95),inset 0 1px 0 rgba(255,255,255,.08)}.listing-tile-photo{width:100%;aspect-ratio:1/1.08;object-fit:cover;display:block;background:#0b101a}.listing-tile-info{padding:10px 11px 11px}.listing-tile-name{font-size:12px;font-weight:700;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.listing-tile-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:5px;color:var(--muted);font-size:10px}.listing-tile-price{font-size:13px;font-weight:800;color:#fff;white-space:nowrap}.listing-tile-status{position:absolute;top:8px;right:8px;padding:5px 7px;border-radius:999px;background:rgba(9,13,22,.62);border:1px solid rgba(255,255,255,.13);font-size:9px;font-weight:800;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}.detail-photo{width:100%;max-height:62vh;aspect-ratio:1/1.08;object-fit:contain;display:block;border:1px solid var(--line);border-radius:18px;background:#0b101a}.detail-thumbs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px}.detail-thumbs img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:9px;border:1px solid var(--line)}.detail-topbar{display:flex;align-items:center;gap:8px;margin-bottom:12px}.detail-topbar button{min-height:38px;padding:8px 11px}.detail-card{margin-top:12px}.home-section-title{display:flex;align-items:end;justify-content:space-between;gap:10px;margin-top:18px}.home-section-title h3{margin:0;font-size:15px}.home-section-title span{font-size:10px;color:var(--muted2)}
+.grid img{width:100%;aspect-ratio:1;object-fit:cover;display:block;border:1px solid var(--line);border-radius:14px;background:#0b101a}.listing-gallery{margin-top:15px}.listing-main-photo{width:100%;aspect-ratio:1;object-fit:cover;display:block;border:1px solid var(--line);border-radius:17px;background:#0b101a}.listing-thumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}.listing-thumbs img{width:100%;aspect-ratio:1;object-fit:cover;border:1px solid var(--line);border-radius:12px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.actions button{flex:0 0 auto}
 input,select,textarea{font:inherit;width:100%;padding:12px 13px;margin:7px 0 15px;border:1px solid var(--line);border-radius:12px;background:rgba(2,6,23,.52);color:var(--text);outline:none;font-size:13px;transition:var(--ease)}input::placeholder,textarea::placeholder{color:#475569}input:hover,select:hover,textarea:hover{border-color:rgba(255,255,255,.13)}input:focus,select:focus,textarea:focus{border-color:rgba(99,102,241,.6);box-shadow:0 0 0 3px rgba(99,102,241,.11),0 0 22px rgba(99,102,241,.07)}label{display:block;font-size:10px;color:#cbd5e1;font-weight:700;letter-spacing:.08em}.range{accent-color:#6366f1;padding:0!important;border:0!important;box-shadow:none!important;background:transparent!important}.check{display:flex;gap:9px;align-items:center;margin:9px 0 15px;color:#cbd5e1;font-size:12px;letter-spacing:0}.check input{width:auto;margin:0;accent-color:#6366f1}.preview{width:100%;max-height:55vh;object-fit:contain;background:#080d16;border-radius:17px;border:1px solid var(--line)}.empty{text-align:center;padding:56px 12px;color:var(--muted2);font-size:12px}.hidden{display:none!important}.copy-row{display:flex;gap:8px;align-items:flex-start}.copy-row input,.copy-row textarea{margin-top:7px}.seo-box{margin-top:14px;padding:14px;border:1px solid rgba(129,140,248,.16);border-radius:15px;background:rgba(99,102,241,.045)}.seo-box h4{margin:0 0 10px;font-size:12px}.brand-check{margin:-4px 0 14px}hr{border:0;border-top:1px solid var(--line);margin:24px 0}
 #ai .card:first-child{background:radial-gradient(360px 180px at 100% 0%,rgba(99,102,241,.1),transparent 72%),linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.025))}#editor .card>.card{background:rgba(255,255,255,.018);box-shadow:none}#toast{left:16px!important;right:16px!important;bottom:22px!important;z-index:99;padding:13px 16px!important;border:1px solid rgba(255,255,255,.12)!important;border-radius:14px!important;color:#f8fafc!important;background:rgba(15,23,42,.94)!important;box-shadow:0 18px 45px rgba(0,0,0,.55)!important;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
-@media(max-width:560px){input,select,textarea{font-size:16px!important;-webkit-text-size-adjust:100%}#aiDescription{font-size:16px!important}.check input{font-size:16px!important}.nav{touch-action:manipulation}button{touch-action:manipulation}header{padding:16px 16px 13px}.wrap{padding:18px 12px 90px}.nav{top:68px;margin-bottom:16px}.nav button{padding:10px 4px;min-height:40px;font-size:10px}.card{padding:20px;border-radius:18px}.hero{min-height:205px;padding:25px 22px;border-radius:22px}.hero-title{font-size:38px}.grid,.listing-thumbs{gap:6px}.actions button{flex:1 1 auto}}
+@media(max-width:560px){.listing-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.listing-tile-info{padding:9px}.listing-tile-name{font-size:11px}.listing-tile-price{font-size:12px}.detail-thumbs{grid-template-columns:repeat(5,1fr)}input,select,textarea{font-size:16px!important;-webkit-text-size-adjust:100%}#aiDescription{font-size:16px!important}.check input{font-size:16px!important}.nav{touch-action:manipulation}button{touch-action:manipulation}header{padding:16px 16px 13px}.wrap{padding:18px 12px 90px}.nav{top:68px;margin-bottom:16px}.nav button{padding:10px 4px;min-height:40px;font-size:10px}.card{padding:20px;border-radius:18px}.hero{min-height:205px;padding:25px 22px;border-radius:22px}.hero-title{font-size:38px}.grid,.listing-thumbs{gap:6px}.actions button{flex:1 1 auto}}
 </style>
 
 </head>
@@ -134,6 +136,11 @@ input,select,textarea{font:inherit;width:100%;padding:12px 13px;margin:7px 0 15p
 <button class="secondary" onclick="show('home')">Volver</button>
 </div>
 </div>
+</section>
+
+<section id="listingDetail" class="hidden">
+<div class="detail-topbar"><button type="button" class="secondary" onclick="show('home')">‹ Anuncios</button><div style="flex:1"></div><span class="tag" style="margin:0">Detalle</span></div>
+<div id="listingDetailBody"></div>
 </section>
 
 <section id="privacy" class="hidden">
@@ -287,7 +294,7 @@ function accountSummary(l){
 }
 
 function show(id){
-  ['home','editor','privacy','accounts','ai'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id));
+  ['home','listingDetail','editor','privacy','accounts','ai'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id));
   if(id==='home') renderHome();
 }
 function newListing(){
@@ -306,27 +313,47 @@ function clearForm(){
 }
 function renderHome(){
  const el=document.getElementById('homeList');
- const soldEl=document.getElementById('soldGallery');
  const active=listings.filter(l=>!l.sold);
- if(!active.length){el.innerHTML='<div class="card empty">No tienes anuncios activos.<br><br>Pulsa <b>+ Nuevo</b> para crear uno.</div>'}
- else el.innerHTML=active.map(l=>{
-   const i=listings.indexOf(l), photos=Array.isArray(l.photos)?l.photos:[], main=photos[0]||'';
-   return `<div class="card">
-    <div class="row"><div><b>${esc(l.name||'Sin título')}</b><div class="muted">${esc(l.brand||'Sin marca')} · ${esc(l.size||'')}</div></div><b class="price">${Number(l.price||0).toFixed(2)} €</b></div>
-    <span class="tag">👤 ${esc(accountSummary(l))}</span> <span class="tag">${esc(l.condition||'')}</span>
-    ${main?`<div class="listing-gallery"><img class="listing-main-photo" src="${main}" alt="Foto principal">${photos.length>1?`<div class="listing-thumbs">${photos.slice(1).map((p,j)=>`<img src="${p}" alt="Foto ${j+2}">`).join('')}</div>`:''}<div class="small" style="margin-top:7px">${photos.length} foto${photos.length===1?'':'s'} en este anuncio</div></div>`:''}
-    <div class="actions"><button onclick="editListing(${i})">Editar</button><button onclick="generateAIForSavedListing(${i},this)">✨ Generar Vinted con IA</button><button class="secondary" onclick="openPrivacy(${i})">🔒 Privacidad / fotos</button><button class="danger" onclick="deleteListing(${i})">Borrar</button></div>
-    <div class="seo-box">
-      <h4>🛍️ CONTENIDO PARA VINTED · SEO</h4>
-      <label>Nombre para Vinted</label>
-      <div class="copy-row"><input value="${esc(l.aiTitle||'Todavía no generado')}" readonly><button type="button" class="secondary" onclick="copySavedAI(${i},'title')">📋</button></div>
-      <label>Descripción para Vinted</label>
-      <div class="copy-row"><textarea readonly style="min-height:180px">${esc(l.aiDescription||'Todavía no generada')}</textarea><button type="button" class="secondary" onclick="copySavedAI(${i},'description')">📋</button></div>
-      <div class="small">Tu nombre y descripción originales se mantienen arriba, separados del contenido SEO generado por Gemini.</div>
-    </div>
-   </div>`;
- }).join('');
+ if(!active.length){
+   el.innerHTML='<div class="card empty">No tienes anuncios activos.<br><br>Pulsa <b>+ Nuevo</b> para crear uno.</div>';
+ }else{
+   el.innerHTML='<div class="listing-grid">'+active.map(l=>{
+     const i=listings.indexOf(l), photos=Array.isArray(l.photos)?l.photos:[], main=photos[0]||'';
+     return `<div class="card listing-tile" role="button" tabindex="0" onclick="openListing(${i})" onkeydown="if(event.key===\'Enter\'||event.key===\' \')openListing(${i})">
+       ${main?`<img class="listing-tile-photo" src="${main}" alt="">`:`<div class="listing-tile-photo" style="display:grid;place-items:center;color:#64748b;font-size:11px">Sin foto</div>`}
+       <div class="listing-tile-info"><div class="listing-tile-name">${esc(l.name||'Sin título')}</div><div class="listing-tile-meta"><span>${esc(l.size||'')} ${l.noBrand?'':'· '+esc(l.brand||'')}</span><span class="listing-tile-price">${Number(l.price||0).toFixed(2)} €</span></div></div>
+     </div>`;
+   }).join('')+'</div>';
+ }
  renderSoldGallery(false);
+}
+
+function openListing(i){
+ const listing=listings[i];
+ if(!listing)return;
+ const body=document.getElementById('listingDetailBody');
+ const photos=Array.isArray(listing.photos)?listing.photos:[];
+ const main=photos[0]||'';
+ body.innerHTML=`
+   <div class="card detail-card">
+     ${main?`<img class="detail-photo" src="${main}" alt="Foto principal">`:'<div class="empty">Este anuncio no tiene fotos.</div>'}
+     ${photos.length>1?`<div class="detail-thumbs">${photos.map((p,j)=>`<img src="${p}" alt="Foto ${j+1}">`).join('')}</div>`:''}
+   </div>
+   <div class="card detail-card">
+     <div class="row"><div style="min-width:0"><h2 style="margin-bottom:5px">${esc(listing.name||'Sin título')}</h2><div class="muted">${esc(listing.brand||'')} ${listing.size?'· '+esc(listing.size):''}</div></div><b class="price">${Number(listing.sold?listing.salePrice:listing.price)||0} €</b></div>
+     <div><span class="tag">👤 ${esc(listing.sold?listing.saleAccount:accountSummary(listing))}</span> <span class="tag">${esc(listing.condition||'')}</span>${listing.sold?` <span class="tag" style="border-color:#b8ff3d;color:#b8ff3d">✓ VENDIDO</span>`:''}</div>
+     <hr>
+     <h3>Tu anuncio</h3><p class="muted" style="white-space:pre-wrap">${esc(listing.description||'Sin descripción')}</p>
+     <div class="actions">
+       <button onclick="editListing(${i})">✏️ Editar</button>
+       ${!listing.sold?`<button onclick="editListing(${i})">🏷️ Marcar vendido</button>`:''}
+       ${!listing.sold?`<button onclick="generateAIForSavedListing(${i},this)">✨ Generar Vinted con IA</button>`:''}
+       <button class="secondary" onclick="openPrivacy(${i})">🔒 Privacidad / fotos</button>
+       <button class="danger" onclick="deleteListing(${i})">Borrar</button>
+     </div>
+     ${!listing.sold?`<div class="seo-box"><h4>🛍️ CONTENIDO PARA VINTED · SEO</h4><label>Nombre para Vinted</label><div class="copy-row"><input value="${esc(listing.aiTitle||'Todavía no generado')}" readonly><button type="button" class="secondary" onclick="copySavedAI(${i},'title')">📋</button></div><label>Descripción para Vinted</label><div class="copy-row"><textarea readonly style="min-height:180px">${esc(listing.aiDescription||'Todavía no generada')}</textarea><button type="button" class="secondary" onclick="copySavedAI(${i},'description')">📋</button></div><div class="small">Tu nombre y descripción originales se mantienen separados del contenido SEO generado por Gemini.</div></div>`:''}
+   </div>`;
+ show('listingDetail');
 }
 
 async function generateAIForSavedListing(i,button){
@@ -370,15 +397,13 @@ function renderSoldGallery(showIt=true){
  const soldEl=document.getElementById('soldGallery');
  const sold=listings.filter(l=>l.sold);
  if(!sold.length){soldEl.innerHTML='<div class="card empty">Todavía no hay artículos vendidos.</div>'}
- else soldEl.innerHTML=`<div class="card"><h3>🛍️ Historial de ventas</h3><p class="muted">Aquí se guardan los anuncios que ya has marcado como vendidos.</p></div>`+sold.map(l=>{
+ else soldEl.innerHTML='<div class="listing-grid">'+sold.map(l=>{
    const i=listings.indexOf(l), photos=Array.isArray(l.photos)?l.photos:[], main=photos[0]||'';
-   return `<div class="card">
-    <div class="row"><div><b>${esc(l.name||'Sin título')}</b><div class="muted">${esc(l.brand||'')} · ${esc(l.size||'')}</div></div><b class="price">${Number(l.salePrice||0).toFixed(2)} €</b></div>
-    <span class="tag" style="border-color:#b8ff3d;color:#b8ff3d">✓ VENDIDO</span> <span class="tag">👤 ${esc(l.saleAccount||'Sin cuenta')}</span>
-    ${main?`<div class="listing-gallery"><img class="listing-main-photo" src="${main}" alt="Foto principal">${photos.length>1?`<div class="listing-thumbs">${photos.slice(1).map((p,j)=>`<img src="${p}" alt="Foto ${j+2}">`).join('')}</div>`:''}</div>`:''}
-    <div class="actions"><button onclick="editListing(${i})">Ver / editar</button></div>
+   return `<div class="card listing-tile" role="button" tabindex="0" onclick="openListing(${i})" onkeydown="if(event.key===\'Enter\'||event.key===\' \')openListing(${i})">
+     ${main?`<img class="listing-tile-photo" src="${main}" alt="">`:`<div class="listing-tile-photo" style="display:grid;place-items:center;color:#64748b;font-size:11px">Sin foto</div>`}
+     <div class="listing-tile-status">✓ VENDIDO</div><div class="listing-tile-info"><div class="listing-tile-name">${esc(l.name||'Sin título')}</div><div class="listing-tile-meta"><span>${esc(l.size||'')}</span><span class="listing-tile-price">${Number(l.salePrice||0).toFixed(2)} €</span></div></div>
    </div>`;
- }).join('');
+ }).join('')+'</div>';
  if(showIt) soldEl.classList.remove('hidden');
 }
 function toggleSoldGallery(){
@@ -836,29 +861,27 @@ function processImage(src,deg,crop){
   const img=new Image();
   img.onload=()=>{
    try{
+    // Limitamos el tamaño de trabajo para evitar que Safari/iOS reviente la memoria con fotos enormes.
+    const maxSide=1800;
+    const scale=Math.min(1,maxSide/Math.max(img.width,img.height));
+    const iw=Math.max(1,Math.round(img.width*scale)), ih=Math.max(1,Math.round(img.height*scale));
     const rad=deg*Math.PI/180,sin=Math.abs(Math.sin(rad)),cos=Math.abs(Math.cos(rad));
-    const nw=Math.ceil(img.width*cos+img.height*sin),nh=Math.ceil(img.width*sin+img.height*cos);
+    const nw=Math.max(1,Math.ceil(iw*cos+ih*sin)),nh=Math.max(1,Math.ceil(iw*sin+ih*cos));
     const full=document.createElement('canvas');full.width=nw;full.height=nh;
-    const fctx=full.getContext('2d',{willReadFrequently:true});
-    fctx.clearRect(0,0,nw,nh);fctx.translate(nw/2,nh/2);fctx.rotate(rad);fctx.drawImage(img,-img.width/2,-img.height/2);
-    // Find the exact non-transparent bounds of the rotated image. This guarantees no black/empty corners.
-    const pixels=fctx.getImageData(0,0,nw,nh).data;
-    let minX=nw,minY=nh,maxX=-1,maxY=-1;
-    for(let y=0;y<nh;y++){
-      for(let x=0;x<nw;x++){
-        if(pixels[(y*nw+x)*4+3]>5){if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y}
-      }
-    }
-    if(maxX<0) throw new Error('Imagen vacía');
-    const manual=Math.min(crop,Math.floor(Math.min((maxX-minX+1)/2-1,(maxY-minY+1)/2-1)));
-    const sx=minX+Math.max(0,manual),sy=minY+Math.max(0,manual);
-    const sw=Math.max(1,maxX-minX+1-2*manual),sh=Math.max(1,maxY-minY+1-2*manual);
+    const fctx=full.getContext('2d');
+    if(!fctx) throw new Error('Canvas no disponible');
+    fctx.translate(nw/2,nh/2);fctx.rotate(rad);fctx.drawImage(img,-iw/2,-ih/2,iw,ih);
+    const safeCrop=Math.min(Number(crop)||0,Math.floor(Math.min(nw,nh)/2)-1);
+    const sx=Math.max(0,safeCrop),sy=Math.max(0,safeCrop);
+    const sw=Math.max(1,nw-safeCrop*2),sh=Math.max(1,nh-safeCrop*2);
     const canvas=document.createElement('canvas');canvas.width=sw;canvas.height=sh;
-    const ctx=canvas.getContext('2d');ctx.drawImage(full,sx,sy,sw,sh,0,0,sw,sh);
+    const ctx=canvas.getContext('2d');if(!ctx) throw new Error('Canvas no disponible');
+    ctx.drawImage(full,sx,sy,sw,sh,0,0,sw,sh);
     canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('No se pudo generar la imagen')),'image/jpeg',.95);
    }catch(err){reject(err)}
   };
-  img.onerror=()=>reject(new Error('No se pudo cargar una de las fotos'));img.src=src;
+  img.onerror=()=>reject(new Error('No se pudo cargar una de las fotos'));
+  img.src=src;
  });
 }
 

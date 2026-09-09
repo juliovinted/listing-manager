@@ -314,10 +314,42 @@ function renderHome(){
     <div class="row"><div><b>${esc(l.name||'Sin título')}</b><div class="muted">${esc(l.brand||'')} · ${esc(l.size||'')}</div></div><b class="price">${Number(l.price||0).toFixed(2)} €</b></div>
     <span class="tag">👤 ${esc(accountSummary(l))}</span> <span class="tag">${esc(l.condition||'')}</span>
     ${main?`<div class="listing-gallery"><img class="listing-main-photo" src="${main}" alt="Foto principal">${photos.length>1?`<div class="listing-thumbs">${photos.slice(1).map((p,j)=>`<img src="${p}" alt="Foto ${j+2}">`).join('')}</div>`:''}<div class="small" style="margin-top:7px">${photos.length} foto${photos.length===1?'':'s'} en este anuncio</div></div>`:''}
-    <div class="actions"><button onclick="editListing(${i})">Editar</button><button class="secondary" onclick="openPrivacy(${i})">🔒 Privacidad / fotos</button><button class="danger" onclick="deleteListing(${i})">Borrar</button></div>
+    <div class="actions"><button onclick="editListing(${i})">Editar</button><button onclick="generateAIForSavedListing(${i},this)">✨ Generar con IA</button><button class="secondary" onclick="openPrivacy(${i})">🔒 Privacidad / fotos</button><button class="danger" onclick="deleteListing(${i})">Borrar</button></div>
    </div>`;
  }).join('');
  renderSoldGallery(false);
+}
+
+async function generateAIForSavedListing(i,button){
+ const listing=listings[i];
+ if(!listing){alert('No se encontró el anuncio.');return}
+ const photos=Array.isArray(listing.photos)?listing.photos:[];
+ if(!photos.length){alert('Este anuncio no tiene fotos.');return}
+ const size=String(listing.size||'').trim();
+ if(!size){alert('Este anuncio no tiene talla guardada. Añade la talla antes de generar con IA.');return}
+ const originalText=button?button.textContent:'';
+ if(button){button.disabled=true;button.textContent='⏳ Generando…'}
+ try{
+   // Para anuncios ya guardados usamos ÚNICAMENTE la primera foto: es la foto principal del artículo.
+   const resized=await resizeImageDataURL(photos[0],768,.78);
+   const photo=dataUrlParts(resized);
+   const brand=String(listing.brand||'').trim();
+   const color=String(listing.color||'').trim();
+   const extra=`This is an existing saved Vinted listing. Generate a fresh optimized English title and description from the FIRST PHOTO ONLY. Use the stored information below as context, but verify visual details from the photo and never invent anything. Existing title: ${listing.name||'None'}. Existing description: ${listing.description||'None'}. Condition: ${listing.condition||'Not provided'}. Do not treat background garments or props as part of the item.`;
+   const r=await fetch(WORKER_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({photos:[photo],brand,size,color,extra})});
+   const data=await r.json().catch(()=>({}));
+   if(!r.ok) throw new Error(data.error||('HTTP '+r.status));
+   if(!data.title||!data.description) throw new Error('Gemini no devolvió un título y una descripción válidos.');
+   listing.name=String(data.title).trim().slice(0,100);
+   listing.description=String(data.description).trim();
+   await persistListings();
+   renderHome();
+   toast('✓ Título y descripción actualizados con Gemini');
+ }catch(err){
+   console.error(err);
+   if(button){button.disabled=false;button.textContent=originalText||'✨ Generar con IA'}
+   alert('No se pudo generar el anuncio con Gemini.\n\n'+(err.message||'Error desconocido'));
+ }
 }
 
 function renderSoldGallery(showIt=true){

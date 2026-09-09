@@ -627,7 +627,7 @@ async function generateFluxImage(){
 IMPORTANT: preserve the exact garment from the reference image. Do not change its brand, logo, graphic, text, color, pattern, material appearance, shape, proportions, seams or distinctive details. Do not invent or remove garment details. Only improve the photographic context, pose/presentation, lighting and background around the garment. The garment must remain the clear visual subject. Photorealistic, natural proportions, premium commercial fashion photography, no text, no watermark.`;
  status.textContent='⏳ Preparando foto y generando con FLUX…';
  try{
-  const resized=await resizeImageDataURL(aiPhotos[0],512,.88);
+  const resized=await resizeImageDataURL(aiPhotos[0],480,.88);
   const photo=dataUrlParts(resized);
   const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'image',photos:[photo],prompt,width:1024,height:1024})});
   const data=await r.json().catch(()=>({}));

@@ -90,14 +90,7 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 <div class="actions"><button type="button" onclick="generateAIListing()">✨ Generar título + descripción</button><button type="button" class="secondary" onclick="clearAI()">Limpiar</button></div>
 <div id="aiStatus" class="small" style="margin-top:10px"></div>
 </div>
-<div class="card">
-<h3>⚙️ Conexión con tu Worker</h3>
-<p class="muted">La página no guarda tu API key. Las peticiones pasan por tu Cloudflare Worker: Gemini analiza el anuncio y Workers AI/FLUX genera las fotos.</p>
-<label>URL DE TU WORKER</label>
-<input id="aiEndpoint" placeholder="https://tu-worker.tu-subdominio.workers.dev">
-<div class="actions"><button type="button" class="secondary" onclick="saveAISettings()">Guardar conexión</button><button type="button" class="secondary" onclick="testAIConnection()">Probar conexión</button></div>
-<p class="small">Necesitas desplegar <b>worker.js</b>, configurar <b>GEMINI_API_KEY</b> como secreto y conectar el binding <b>AI</b> de Workers AI.</p>
-</div>
+
 <div id="aiResult" class="card hidden">
 <h3>Resultado</h3>
 <label>TÍTULO</label>
@@ -171,6 +164,7 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 <div id="toast" class="hidden" style="position:fixed;left:16px;right:16px;bottom:22px;z-index:99;background:#f5f5f7;color:#09090b;padding:14px 16px;border-radius:15px;font-weight:800;box-shadow:0 18px 45px #0008;text-align:center"></div>
 
 <script>
+const WORKER_ENDPOINT = "https://vinted-gemini.m8c9j7hfvn.workers.dev";
 let listings=[];
 let current=null, files=[];
 let dbPromise=null;
@@ -423,43 +417,31 @@ galleryInput.addEventListener('change', async e=>{
 function renderPhotoGrid(arr){photoGrid.innerHTML=arr.map(p=>`<img src="${p}">`).join('')}
 function showAI(){
  show('ai');
- const endpoint=localStorage.getItem('lm_gemini_endpoint')||'';
- document.getElementById('aiEndpoint').value=endpoint;
  const status=document.getElementById('aiStatus');
  if(document.getElementById('aiResult').classList.contains('hidden')){
-   status.textContent=endpoint?'✓ Worker preparado. Añade fotos y genera el anuncio.':'⚙️ Añade la URL de tu Worker para empezar.';
+   status.textContent='✓ Gemini + FLUX preparados. Añade fotos y genera.';
  }else status.textContent='✓ Resultado listo. Puedes editarlo o pasarlo a un anuncio.';
 }
-function saveAISettings(){
- const value=document.getElementById('aiEndpoint').value.trim().replace(/\/$/,'');
- if(value && !/^https:\/\//i.test(value)){alert('La URL debe empezar por https://');return}
- localStorage.setItem('lm_gemini_endpoint',value);
- toast(value?'✓ Conexión del Worker guardada':'✓ Conexión eliminada');
- document.getElementById('aiStatus').textContent=value?'✓ Gemini preparado.':'⚙️ Añade la URL de tu Worker de Gemini para empezar.';
-}
+function saveAISettings(){ toast('✓ La conexión con el Worker ya está configurada.'); }
 async function testAIConnection(){
- const endpoint=document.getElementById('aiEndpoint').value.trim().replace(/\/$/,'');
- if(!endpoint){alert('Introduce primero la URL de tu Worker.');return}
  const status=document.getElementById('aiStatus');
  status.textContent='⏳ Probando conexión con el Worker…';
  try{
-   const r=await fetch(endpoint,{method:'GET'});
+   const r=await fetch(WORKER_ENDPOINT,{method:'GET'});
    const data=await r.json().catch(()=>({}));
    if(!r.ok) throw new Error(data.error||('HTTP '+r.status));
-   localStorage.setItem('lm_gemini_endpoint',endpoint);
    status.textContent='✓ Conexión correcta con el Worker.';
  }catch(err){
    console.error(err);
    status.textContent='❌ No se pudo conectar con el Worker.';
-   alert('No se pudo conectar con el Worker.\n\nComprueba la URL y que esté desplegado.\n\n'+(err.message||'Error desconocido'));
+   alert('No se pudo conectar con el Worker.\n\n'+(err.message||'Error desconocido'));
  }
 }
 function clearAI(){
  aiPhotos=[]; document.getElementById('aiPhotoGrid').innerHTML='';
  ['aiBrand','aiSize','aiColor','aiExtra','aiTitle','aiDescription'].forEach(id=>document.getElementById(id).value='');
  document.getElementById('aiResult').classList.add('hidden');
- const endpoint=localStorage.getItem('lm_gemini_endpoint')||'';
- document.getElementById('aiStatus').textContent=endpoint?'✓ Worker preparado. Añade fotos y genera el anuncio.':'⚙️ Añade la URL de tu Worker para empezar.';
+ document.getElementById('aiStatus').textContent='✓ Gemini + FLUX preparados. Añade fotos y genera.';
 }
 function renderAIPhotos(){
  document.getElementById('aiPhotoGrid').innerHTML=aiPhotos.map(p=>`<img src="${p}" alt="Foto de la prenda">`).join('');
@@ -479,15 +461,13 @@ function dataUrlParts(dataUrl){
 }
 async function generateAIListing(){
  const status=document.getElementById('aiStatus');
- const endpoint=(document.getElementById('aiEndpoint').value.trim()||localStorage.getItem('lm_gemini_endpoint')||'').replace(/\/$/,'');
- if(!endpoint){status.textContent='';alert('Primero introduce la URL de tu Cloudflare Worker en «Conexión con Gemini».');return}
+ const endpoint=WORKER_ENDPOINT;
  if(!aiPhotos.length){status.textContent='';alert('Sube al menos una foto de la prenda.');return}
  const size=document.getElementById('aiSize').value.trim();
  if(!size){status.textContent='';alert('Indica la talla.');return}
  const brand=document.getElementById('aiBrand').value.trim();
  const color=document.getElementById('aiColor').value.trim();
  const extra=document.getElementById('aiExtra').value.trim();
- localStorage.setItem('lm_gemini_endpoint',endpoint);
  status.textContent='⏳ Enviando fotos a Gemini…';
  try{
    const photos=aiPhotos.map(dataUrlParts);
@@ -527,11 +507,9 @@ function clearFluxResult(){
  document.getElementById('fluxStatus').textContent='';
 }
 async function generateFluxImage(){
- const endpoint=(document.getElementById('aiEndpoint').value.trim()||localStorage.getItem('lm_gemini_endpoint')||'').replace(/\/$/,'');
+ const endpoint=WORKER_ENDPOINT;
  const status=document.getElementById('fluxStatus');
- if(!endpoint){alert('Primero introduce y guarda la URL de tu Worker.');return}
  if(!aiPhotos.length){alert('Sube al menos una foto de la prenda arriba.');return}
- localStorage.setItem('lm_gemini_endpoint',endpoint);
  const style=document.getElementById('fluxStyle').value;
  const extra=document.getElementById('fluxExtra').value.trim();
  const prompt=`Create a realistic professional fashion listing photo using the supplied garment image as the main reference. ${style}. ${extra ? extra+'.' : ''}

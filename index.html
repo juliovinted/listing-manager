@@ -107,24 +107,14 @@ input,select,textarea{font:inherit;width:100%;padding:12px 13px;margin:7px 0 15p
 <p class="small" style="margin-top:10px">Puedes editar el resultado antes de pasarlo al editor. Después podrás elegir las cuentas y pulsar <b>Guardar anuncio</b>.</p>
 </div>
 <div class="card">
-<h3>🖼️ Generar foto con FLUX</h3>
-<p class="muted">Usa la misma foto de la prenda y FLUX.2 Klein 4B para crear una imagen más profesional. Gemini sigue encargado del título y la descripción.</p>
-<label>ESTILO / ESCENA</label>
-<select id="fluxStyle">
-<option value="clean studio product photo">Estudio limpio</option>
-<option value="premium streetwear editorial photo">Streetwear editorial</option>
-<option value="Y2K bedroom aesthetic, realistic fashion photography">Y2K</option>
-<option value="summer outdoor lifestyle fashion photo">Verano / exterior</option>
-<option value="minimal luxury fashion campaign">Lujo minimalista</option>
-<option value="sporty urban lifestyle fashion photo">Deportivo / urbano</option>
-</select>
-<label>INSTRUCCIONES EXTRA (OPCIONAL)</label>
-<input id="fluxExtra" placeholder="Ej. fondo gris, plantas pequeñas, luz natural...">
-<div class="actions"><button type="button" onclick="generateFluxImage()">🪄 Generar foto</button><button type="button" class="secondary" onclick="clearFluxResult()">Limpiar</button></div>
+<h3>🖼️ Foto de estudio</h3>
+<p class="muted">Convierte la foto de la prenda en una fotografía de estudio profesional: fondo blanco puro, prenda intacta, centrada y con márgenes seguros para Vinted.</p>
+<div class="actions"><button type="button" onclick="generateFluxImage()">✨ Generar foto de estudio</button></div>
 <div id="fluxStatus" class="small" style="margin-top:10px"></div>
 <div id="fluxResult" class="hidden" style="margin-top:14px">
-<img id="fluxImage" class="preview" alt="Foto generada con FLUX">
+<img id="fluxImage" class="preview" alt="Foto de estudio generada">
 <div class="actions"><button type="button" onclick="saveFluxImage()">📤 Guardar / Compartir</button></div>
+</div>
 </div>
 </div>
 <div class="card">
@@ -621,15 +611,12 @@ async function generateFluxImage(){
  const endpoint=WORKER_ENDPOINT;
  const status=document.getElementById('fluxStatus');
  if(!aiPhotos.length){alert('Sube al menos una foto de la prenda arriba.');return}
- const style=document.getElementById('fluxStyle').value;
- const extra=document.getElementById('fluxExtra').value.trim();
- const prompt=`Create a realistic professional fashion listing photo using the supplied garment image as the main reference. ${style}. ${extra ? extra+'.' : ''}
-IMPORTANT: preserve the exact garment from the reference image. Do not change its brand, logo, graphic, text, color, pattern, material appearance, shape, proportions, seams or distinctive details. Do not invent or remove garment details. Only improve the photographic context, pose/presentation, lighting and background around the garment. The garment must remain the clear visual subject. Photorealistic, natural proportions, premium commercial fashion photography, no text, no watermark.`;
+ const prompt='studio product photo';
  status.textContent='⏳ Preparando foto y generando con FLUX…';
  try{
   const resized=await resizeImageDataURL(aiPhotos[0],480,.88);
   const photo=dataUrlParts(resized);
-  const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'image',photos:[photo],prompt,width:1024,height:1024})});
+  const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'image',photos:[photo],prompt})});
   const data=await r.json().catch(()=>({}));
   if(!r.ok) throw new Error(data.error||('HTTP '+r.status));
   if(!data.image) throw new Error('FLUX no devolvió una imagen válida.');

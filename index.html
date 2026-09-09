@@ -2,13 +2,13 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#111111">
 <title>Listing Manager</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 :root{--bg:#090d16;--bg2:#0d1320;--panel:rgba(255,255,255,.035);--panel2:rgba(255,255,255,.055);--line:rgba(255,255,255,.08);--line2:rgba(129,140,248,.28);--text:#f8fafc;--muted:#94a3b8;--muted2:#64748b;--a:#6366f1;--b:#3b82f6;--c:#8b5cf6;--danger:#fb7185;--ease:all .25s cubic-bezier(.4,0,.2,1)}
-*{box-sizing:border-box}html{background:var(--bg);color-scheme:dark;scroll-behavior:smooth}body{margin:0;min-height:100vh;color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"SF Pro Display",sans-serif;background:radial-gradient(600px 380px at 88% -5%,rgba(99,102,241,.15),transparent 68%),radial-gradient(520px 350px at -10% 25%,rgba(59,130,246,.08),transparent 70%),linear-gradient(180deg,#090d16,#0a0f19 55%,#090d16);-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}html{background:var(--bg);color-scheme:dark;scroll-behavior:smooth;-webkit-text-size-adjust:100%;text-size-adjust:100%;overflow-x:hidden}body{margin:0;overflow-x:hidden;min-height:100vh;color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"SF Pro Display",sans-serif;background:radial-gradient(600px 380px at 88% -5%,rgba(99,102,241,.15),transparent 68%),radial-gradient(520px 350px at -10% 25%,rgba(59,130,246,.08),transparent 70%),linear-gradient(180deg,#090d16,#0a0f19 55%,#090d16);-webkit-font-smoothing:antialiased}
 body:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.14;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:48px 48px;mask-image:linear-gradient(to bottom,black,transparent 78%)}
 header{padding:18px 18px 15px;position:sticky;top:0;z-index:30;background:rgba(9,13,22,.72);backdrop-filter:blur(22px) saturate(140%);-webkit-backdrop-filter:blur(22px) saturate(140%);border-bottom:1px solid rgba(255,255,255,.065)}
 .brand{max-width:760px;margin:auto;display:flex;align-items:center;gap:12px}.logo{width:40px;height:40px;border-radius:13px;background:linear-gradient(135deg,#6366f1,#3b82f6 55%,#8b5cf6);display:grid;place-items:center;color:#fff;font-weight:800;font-size:12px;letter-spacing:-.4px;box-shadow:0 8px 30px rgba(79,70,229,.28)}h1{font-size:15px;letter-spacing:-.025em;margin:0;font-weight:700}.sub{color:var(--muted2);font-size:11px;margin-top:3px;font-weight:500}
@@ -20,7 +20,7 @@ button{font:inherit;min-height:42px;border:1px solid transparent;border-radius:1
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:13px}.grid img{width:100%;aspect-ratio:1;object-fit:cover;display:block;border:1px solid var(--line);border-radius:14px;background:#0b101a}.listing-gallery{margin-top:15px}.listing-main-photo{width:100%;aspect-ratio:1;object-fit:cover;display:block;border:1px solid var(--line);border-radius:17px;background:#0b101a}.listing-thumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}.listing-thumbs img{width:100%;aspect-ratio:1;object-fit:cover;border:1px solid var(--line);border-radius:12px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.actions button{flex:0 0 auto}
 input,select,textarea{font:inherit;width:100%;padding:12px 13px;margin:7px 0 15px;border:1px solid var(--line);border-radius:12px;background:rgba(2,6,23,.52);color:var(--text);outline:none;font-size:13px;transition:var(--ease)}input::placeholder,textarea::placeholder{color:#475569}input:hover,select:hover,textarea:hover{border-color:rgba(255,255,255,.13)}input:focus,select:focus,textarea:focus{border-color:rgba(99,102,241,.6);box-shadow:0 0 0 3px rgba(99,102,241,.11),0 0 22px rgba(99,102,241,.07)}label{display:block;font-size:10px;color:#cbd5e1;font-weight:700;letter-spacing:.08em}.range{accent-color:#6366f1;padding:0!important;border:0!important;box-shadow:none!important;background:transparent!important}.check{display:flex;gap:9px;align-items:center;margin:9px 0 15px;color:#cbd5e1;font-size:12px;letter-spacing:0}.check input{width:auto;margin:0;accent-color:#6366f1}.preview{width:100%;max-height:55vh;object-fit:contain;background:#080d16;border-radius:17px;border:1px solid var(--line)}.empty{text-align:center;padding:56px 12px;color:var(--muted2);font-size:12px}.hidden{display:none!important}hr{border:0;border-top:1px solid var(--line);margin:24px 0}
 #ai .card:first-child{background:radial-gradient(360px 180px at 100% 0%,rgba(99,102,241,.1),transparent 72%),linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.025))}#editor .card>.card{background:rgba(255,255,255,.018);box-shadow:none}#toast{left:16px!important;right:16px!important;bottom:22px!important;z-index:99;padding:13px 16px!important;border:1px solid rgba(255,255,255,.12)!important;border-radius:14px!important;color:#f8fafc!important;background:rgba(15,23,42,.94)!important;box-shadow:0 18px 45px rgba(0,0,0,.55)!important;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
-@media(max-width:560px){header{padding:16px 16px 13px}.wrap{padding:18px 12px 90px}.nav{top:68px;margin-bottom:16px}.nav button{padding:10px 4px;min-height:40px;font-size:10px}.card{padding:20px;border-radius:18px}.hero{min-height:205px;padding:25px 22px;border-radius:22px}.hero-title{font-size:38px}.grid,.listing-thumbs{gap:6px}.actions button{flex:1 1 auto}}
+@media(max-width:560px){input,select,textarea{font-size:16px!important;-webkit-text-size-adjust:100%}#aiDescription{font-size:16px!important}.check input{font-size:16px!important}.nav{touch-action:manipulation}button{touch-action:manipulation}header{padding:16px 16px 13px}.wrap{padding:18px 12px 90px}.nav{top:68px;margin-bottom:16px}.nav button{padding:10px 4px;min-height:40px;font-size:10px}.card{padding:20px;border-radius:18px}.hero{min-height:205px;padding:25px 22px;border-radius:22px}.hero-title{font-size:38px}.grid,.listing-thumbs{gap:6px}.actions button{flex:1 1 auto}}
 </style>
 
 </head>
@@ -473,13 +473,114 @@ async function generateAIListing(){
   const brand=document.getElementById('aiBrand').value.trim();
   const color=document.getElementById('aiColor').value.trim();
   const extra=document.getElementById('aiExtra').value.trim();
+  const listingInstructions = `
+You are an expert Vinted listing assistant specialized in creating high-converting titles and descriptions for second-hand and vintage clothing.
+
+The user will provide a photo of a clothing item and/or basic information such as brand, size, color, style or measurements.
+
+Your job is to analyze the item visually and create a Vinted listing in ENGLISH.
+
+IMPORTANT RULES:
+
+1. TITLE
+- Create a highly searchable Vinted title.
+- Maximum length: 100 characters.
+- ALWAYS try to use as close to all 100 characters as possible without adding irrelevant words.
+- Prioritize important search keywords: Brand, garment type, model/style, color, fit, era/style keywords, fashion aesthetics, and relevant popular keywords such as vintage, Y2K, retro, streetwear, oversized, grunge, etc.
+- Do NOT use random keywords just to reach 100 characters.
+- Do NOT claim a brand that is not visible or provided by the user.
+- If the item is unbranded, DO NOT mention unbranded, no brand, or similar in the title unless necessary.
+- Never invent a specific model, collection, material, era or brand that cannot reasonably be established from the information provided.
+- Make the title natural and readable while maximizing relevant search terms.
+
+2. DESCRIPTION
+Write the entire description in ENGLISH.
+
+Use this exact structure:
+
+[ITEM NAME]
+
+🏷️ Brand: [brand]
+📏 Size: [size]
+🎨 Color: [color]
+[OPTIONAL relevant category emoji]: [Style description]
+✅ Condition: Please check the photos for details.
+📸 Please refer to the photos for the item’s exact condition. Any flaws or signs of wear, if present, are shown as clearly as possible.
+📦 Fast & safe shipping ✅
+💬 Feel free to ask any questions! 😊
+
+#keyword #keyword #keyword ...
+
+3. STYLE DESCRIPTION
+The style sentence should describe the garment in a way that helps it sell:
+- Mention the visible design and characteristics.
+- Mention appropriate aesthetics such as vintage, Y2K, retro, streetwear, grunge, casual, workwear, preppy, etc. ONLY when they fit the item.
+- Mention fit when it can be reasonably determined (oversized, slim fit, relaxed, cropped, etc.).
+- Mention possible outfit uses when relevant.
+- Keep it concise and attractive.
+- Never make false claims about authenticity, rarity, exact age, fabric composition or designer provenance.
+
+4. SIZE
+- Use exactly the size provided by the user.
+- If the user gives an approximate size, write exactly that approximate size (for example, L approx.).
+- If the user provides measurements, include them when requested.
+- If the user says that exact measurements are shown in the photos, write: 📏 Size: [size] — Exact measurements are shown in the photos.
+- Do not convert sizes unless the user asks for an equivalent size.
+
+5. BRAND
+- If the brand is clearly provided by the user, use it.
+- If the brand is visible in the image and reasonably readable, you may use it.
+- Never guess a brand based only on appearance.
+- If the user says unbranded or sin marca, do not invent one.
+- If the user specifically asks to omit the fact that it is unbranded, simply omit the brand information rather than writing unbranded.
+
+6. COLOR
+Identify the main visible colors accurately. Use natural fashion terminology such as navy blue, charcoal gray, cream, beige, olive green, burgundy, washed blue denim, etc.
+
+7. HASHTAGS
+- Add relevant Vinted/search keywords as hashtags.
+- Use a mixture of brand keywords, garment type, color, style, aesthetic, fit, fashion category and relevant size/model keywords.
+- Do not use completely unrelated hashtags.
+- Avoid excessive repetition.
+- Hashtags must be lowercase.
+- English only.
+
+8. VISUAL ANALYSIS
+When an image is provided:
+- Analyze the garment carefully before writing.
+- Identify garment type, visible details, color, pattern, silhouette and apparent style.
+- If something cannot be confidently determined from the image, do not invent it.
+- The jeans or other garments used as background/styling props in the photo are NOT part of the item unless the user explicitly says they are included.
+
+9. USER INSTRUCTIONS HAVE PRIORITY
+The user may provide additional instructions such as use 100 characters, don't mention unbranded, English only, size L approximately, include measurements are in the photos, or use keywords. Follow these instructions exactly.
+
+10. OUTPUT
+Normally output ONLY:
+1. The optimized title.
+2. The complete description.
+
+Do not explain your reasoning.
+Do not mention that you are an AI.
+Do not give multiple title options unless requested.
+
+The final result should feel like a real, attractive Vinted listing written by an experienced vintage/resale seller.
+
+CRITICAL FINAL OUTPUT RULE:
+Return valid JSON only, with exactly these two keys and no other keys:
+{"title":"...","description":"..."}
+The title must contain ONLY the Vinted title. The description must contain ONLY the complete Vinted description. Do not wrap the JSON in markdown code fences.
+
+USER'S ADDITIONAL INSTRUCTIONS:
+${extra || 'None'}
+`;
   status.textContent='⏳ Preparando fotos para Gemini…';
   try{
     // Comprimimos las imágenes antes de enviarlas para evitar peticiones gigantes desde iPhone.
     const compressed=await Promise.all(aiPhotos.slice(0,6).map(p=>resizeImageDataURL(p,768,.78)));
     const photos=compressed.map(dataUrlParts);
     status.textContent='⏳ Gemini está analizando la prenda…';
-    const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({photos,brand,size,color,extra})});
+    const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({photos,brand,size,color,extra:listingInstructions})});
     const data=await r.json().catch(()=>({}));
     if(!r.ok) throw new Error(data.error||('HTTP '+r.status));
     if(!data.title||!data.description) throw new Error('Gemini no devolvió un título y una descripción válidos.');
